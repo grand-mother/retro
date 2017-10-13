@@ -1,0 +1,24 @@
+[submodule "danton"]
+	path = deps/danton
+	url = https://github.com/niess/danton
+[submodule "alouette"]
+	path = deps/alouette
+	url = https://github.com/niess/alouette
+[submodule "ent"]
+	path = deps/ent
+	url = https://github.com/niess/ent
+[submodule "pumas"]
+	path = deps/pumas
+	url = https://github.com/niess/pumas
+[submodule "jsmn"]
+	path = deps/jsmn
+	url = https://github.com/zserge/jsmn
+[submodule "grand-tour"]
+	path = deps/grand-tour
+	url = https://github.com/grand-mother/grand-tour
+[submodule "turtle"]
+	path = deps/turtle
+	url = https://github.com/niess/turtle
+[submodule "tinydir"]
+	path = deps/tinydir
+	url = https://github.com/cxong/tinydir.git
