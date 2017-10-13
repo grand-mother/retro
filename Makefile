@@ -1,6 +1,7 @@
 export DEPS_DIR := $(PWD)/deps
 export LIB_DIR := $(PWD)/lib
 export PDF_DIR := $(abspath deps/ent/data/pdf)
+export TURTLE_USE_PNG := 0
 
 .PHONY:  all bin clean lib python
 
