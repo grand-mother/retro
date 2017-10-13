@@ -12,8 +12,8 @@ bin: bin/danton
 clean:
 	@rm -rf bin lib
 
-lib: lib/libalouette.so lib/libdanton.so lib/libent.so lib/libpumas.so         \
-	lib/libturtle.so
+lib: lib/libalouette.so lib/libdanton.so lib/libent.so lib/libjsmn.a           \
+	lib/libpumas.so lib/libturtle.so
 
 bin/danton: deps/danton/src deps/danton/include lib
 	@mkdir -p bin
