@@ -2,3 +2,6 @@
 bin
 lib
 *.b
+
+# Ignore topographic data (too large).
+share/topography
