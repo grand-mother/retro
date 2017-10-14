@@ -4,7 +4,7 @@
 #  Copyright (C) 2017 Université Clermont Auvergne, CNRS/IN2P3, LPC
 #  Author: Valentin NIESS (niess@in2p3.fr)
 #
-#  Generate tau decay vertices for GRAND.
+#  Radio nEuTRino simulatiOn (RETRO).
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -89,13 +89,13 @@ def run(generator, logger, topography, comment=None):
     def filter_event(energy, position, direction):
         """Raw event filter from first principles.
         """
-        # First let us compute the distance to the topography, propagating
-        # backwards.
-        dg = topo.distance(position, [-c for c in direction])
-        if dg is None: return 0.
-
-        # The let us compute the decay length, assuming no energy loss.
+        # First let us compute the decay length, assuming no energy loss.
         dl = energy * 4.89639E-05
+
+        # Then let us compute the distance to the topography, propagating
+        # backwards.
+        dg = topo.distance(position, [-c for c in direction], limit=5. * dl)
+        if dg is None: return 0.
 
         # As selection weight, let us consider the probability that no decay
         # occured on the path to rocks.

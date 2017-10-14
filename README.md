@@ -1,14 +1,17 @@
-# Simulation suite for GRAND
-_This repository is a collection of tools for the full simulation of the
-GRAND detector array._
+# RETRO
+( **R**adio n**E**u**TR**ino simulati**O**n )
+
+## Description
+
+Coming soon ...
 
 ## Installation
 
 Clone the present repository and run the [installation](install.sh) script, e.g:
 
 ```bash
-git clone https://github.com/grand-mother/simulations
-cd simulations
+git clone https://github.com/grand-mother/retro
+cd retro
 ./install.sh
 ```
 
@@ -18,5 +21,5 @@ topography data with TURTLE.
 
 ## License
 
-The GRAND simulation suite is under the **GNU GPLv3** license. See the provided
+The RETRO suite is under the **GNU GPLv3** license. See the provided
 [LICENSE](LICENSE) file.
