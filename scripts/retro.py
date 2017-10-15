@@ -26,7 +26,7 @@ import random
 # Custom import(s)
 from grand_tour import Topography
 
-def run(generator, logger, topography, comment=None):
+def run(generator, processor, logger, topography, comment=None):
     """Generate some tau decay vertices according to the provided settings.
     """
 
@@ -103,10 +103,16 @@ def run(generator, logger, topography, comment=None):
         return math.exp(-dg / dl)
 
     # Main loop over events.
-    trials = 0
+    requested, max_trials = processor["requested"], processor["trials"]
+    trials, total_trials, done = 0, 0, 0
     while True:
+        # Check the termination conditions.
+        if requested and (done == requested): break
+        if max_trials and (total_trials >= max_trials): break
+
         # Generate a tentative tau decay.
         trials += 1
+        total_trials += 1
         position, w0 = generate_position()
         if not topo.is_above(position): continue
         direction, w1 = generate_direction()
@@ -123,6 +129,7 @@ def run(generator, logger, topography, comment=None):
         # Log the decay.
         log_event(energy, position, direction, weight, trials)
         trials = 0
+        done += 1
 
 if __name__ == "__main__":
     # Read the settings from a JSON card.

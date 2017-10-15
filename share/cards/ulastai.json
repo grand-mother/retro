@@ -1,18 +1,22 @@
 {
         "comment" : "This is an example card for the neutrino simulation.",
 
-        "topography" : {
-                "latitude" : 42.928056,
-                "longitude" : 86.741667,
-                "path" : "share/topography",
-                "stack_size" : 25 },
-
         "generator" : {
                 "elevation" : [-10.0, 10.0],
                 "energy" : [1E+06, 1E+12],
                 "position" : [
                         [-5E+04, 5E+04], [-5E+04, 5E+04], [-1E+03, 7E+03] ]},
 
+        "processor" : {
+                "requested" : 100,
+                "trials" : null },
+
         "logger" : {
-                "path" : "events.json" }
+                "path" : "events.json" },
+
+        "topography" : {
+                "latitude" : 42.928056,
+                "longitude" : 86.741667,
+                "path" : "share/topography",
+                "stack_size" : 25 }
 }
