@@ -1,0 +1,21 @@
+{
+        "comment" : "This is an example card with a flat topography.",
+
+        "generator" : {
+                "elevation" : [-10.0, 0.0],
+                "energy" : [1E+06, 1E+12],
+                "position" : [
+                        [-5E+04, 5E+04], [-5E+04, 5E+04], [-2E+03, 2E+03] ]},
+
+        "processor" : {
+                "requested" : 100,
+                "trials" : null },
+
+        "logger" : {
+                "path" : "events-flat.json" },
+
+        "topography" : {
+                "latitude" : 43,
+                "longitude" : 87,
+                "path" : "flat/2" }
+}

@@ -1,5 +1,7 @@
 {
-        "comment" : "This is an example card for the neutrino simulation.",
+        "comment": "This is an example of configuration file for",
+        "comment": "Ulastai, China, where the TREND and 21CMA experiments",
+        "comment": "are located.",
 
         "generator" : {
                 "elevation" : [-10.0, 10.0],
@@ -12,7 +14,7 @@
                 "trials" : null },
 
         "logger" : {
-                "path" : "events.json" },
+                "path" : "events-ulastai.json" },
 
         "topography" : {
                 "latitude" : 42.928056,
