@@ -3,11 +3,13 @@ export LIB_DIR := $(PWD)/lib
 export PDF_DIR := $(abspath deps/ent/data/pdf)
 export TURTLE_USE_PNG := 0
 
-.PHONY:  all bin clean lib python
+PLUGINS := $(wildcard plugins/*)
+
+.PHONY:  all bin clean lib python plugins $(PLUGINS)
 
 all: bin lib python
 
-bin: bin/danton
+bin: bin/danton bin/retro
 
 clean:
 	@rm -rf bin lib
@@ -22,6 +24,10 @@ bin/danton: deps/danton/src deps/danton/include $(DANTON_LIBS)
 	@$(MAKE) -C "deps/danton" -e bin/danton
 	@mv deps/danton/bin/danton bin
 	@echo "--> Done"
+
+bin/retro:
+	@mkdir -p bin
+	@cd bin && ln -s ../scripts/retro.py retro
 
 define build_library
 	echo "o Building $(1) ..."
@@ -48,5 +54,13 @@ lib/python/grand_tour.so: deps/grand-tour/src/grand-tour.c
 	@$(MAKE) --directory="$(DEPS_DIR)/grand-tour" LIB_DIR=$(PWD)/lib/python
 	@echo "--> Done"
 
-lib/python/danton.py: deps/danton/lib/python/danton.py
-	@mkdir -p lib/python && cp $< $@
+lib/python/danton.py:
+	@mkdir -p lib/python
+	@cd lib/python && ln -s ../../deps/danton/lib/python/danton.py danton.py
+
+plugins: $(PLUGINS)
+
+$(PLUGINS):
+	@echo "o Building the $(notdir $@) plugin ..."
+	@make --directory=$@
+	@echo "--> Done"
