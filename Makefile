@@ -12,13 +12,16 @@ bin: bin/danton
 clean:
 	@rm -rf bin lib
 
-lib: lib/libalouette.so lib/libdanton.so lib/libent.so lib/libjsmn.a           \
+DANTON_LIBS := lib/libalouette.so lib/libdanton.so lib/libent.so lib/libjsmn.a \
 	lib/libpumas.so lib/libturtle.so
+lib: $(DANTON_LIBS)
 
-bin/danton: deps/danton/src deps/danton/include lib
+bin/danton: deps/danton/src deps/danton/include $(DANTON_LIBS)
+	echo "o Building danton executable ..."
 	@mkdir -p bin
 	@$(MAKE) -C "deps/danton" -e bin/danton
 	@mv deps/danton/bin/danton bin
+	@echo "--> Done"
 
 define build_library
 	echo "o Building $(1) ..."
@@ -30,17 +33,20 @@ endef
 lib/lib%.so: deps/%/src deps/%/include
 	@$(call build_library,$*,,lib,so)
 
-lib/libdanton.so:
+lib/libdanton.so: deps/danton/src deps/danton/include
 	@$(call build_library,danton,lib/libdanton.so,lib,so)
 
 lib/libjsmn.a: deps/jsmn/jsmn.h
 	@$(call build_library,jsmn,libjsmn.a,.,a)
 	@$(MAKE) --directory="$(DEPS_DIR)/jsmn" clean
 
-python: lib/python/grand_tour.py lib/python/danton.py
+python: lib/python/grand_tour.so lib/python/danton.py
 
-lib/python/grand_tour.py: deps/grand-tour/lib/python/grand_tour.py
-	@mkdir -p lib/python && cp $< $@
+lib/python/grand_tour.so: deps/grand-tour/src/grand-tour.c
+	echo "o Building grand-tour ..."
+	@mkdir -p lib/python
+	@$(MAKE) --directory="$(DEPS_DIR)/grand-tour" LIB_DIR=$(PWD)/lib/python
+	@echo "--> Done"
 
 lib/python/danton.py: deps/danton/lib/python/danton.py
 	@mkdir -p lib/python && cp $< $@
