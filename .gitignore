@@ -1,7 +1,11 @@
 # Ignore binaries
 bin
-lib
+*.so
+*.a
 *.b
+*.pyc
+*.pyo
+lib/python/*.py
 
 # Ignore topographic data (too large).
 share/topography

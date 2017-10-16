@@ -9,10 +9,11 @@ PLUGINS := $(wildcard plugins/*)
 
 all: bin lib python
 
-bin: bin/danton bin/retro
+bin: bin/danton bin/retro-run
 
 clean:
-	@rm -rf bin lib
+	@rm -rf bin lib/*.so lib/*.a lib/python/*.so
+	@find lib/python -type l -delete
 
 DANTON_LIBS := lib/libalouette.so lib/libdanton.so lib/libent.so lib/libjsmn.a \
 	lib/libpumas.so lib/libturtle.so
@@ -25,14 +26,14 @@ bin/danton: deps/danton/src deps/danton/include $(DANTON_LIBS)
 	@mv deps/danton/bin/danton bin
 	@echo "--> Done"
 
-bin/retro:
+bin/retro-run:
 	@mkdir -p bin
-	@cd bin && ln -s ../scripts/retro.py retro
+	@cd bin && ln -s ../scripts/retro-run.py retro-run
 
 define build_library
 	echo "o Building $(1) ..."
 	@$(MAKE) --directory="$(DEPS_DIR)/$(1)" -e $(2)
-	@mkdir -p lib && mv $(DEPS_DIR)/$(1)/$(3)/*.$(4) lib
+	mv $(DEPS_DIR)/$(1)/$(3)/*.$(4) lib
 	@echo "--> Done"
 endef
 
@@ -50,12 +51,10 @@ python: lib/python/grand_tour.so lib/python/danton.py
 
 lib/python/grand_tour.so: deps/grand-tour/src/grand-tour.c
 	echo "o Building grand-tour ..."
-	@mkdir -p lib/python
 	@$(MAKE) --directory="$(DEPS_DIR)/grand-tour" LIB_DIR=$(PWD)/lib/python
 	@echo "--> Done"
 
 lib/python/danton.py:
-	@mkdir -p lib/python
 	@cd lib/python && ln -s ../../deps/danton/lib/python/danton.py danton.py
 
 plugins: $(PLUGINS)
