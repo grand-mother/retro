@@ -19,6 +19,7 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import copy
 import json
 import math
 import sys
@@ -36,8 +37,16 @@ def run(generator, processor, logger, topography, primary=None, comment=None):
     # Get a handle for the topography.
     topo = Topography(**topography)
 
-    # Instanciate a generator for the taus at decay.
-    generate = Generator(**generator)
+    # Instanciate a generator for the taus at decay. First let us vectorize
+    # and flatten the options.
+    if isinstance(generator, dict):
+        generator = [[1., generator],]
+    for i, (w, opts) in enumerate(generator):
+        if i > 0:
+            new = copy.deepcopy(generator[i - 1][1])
+            new.update(opts)
+            generator[i][1] = new
+    generate = Generator(generator, topo)
 
     # Instanciate an event logger.
     log_event = EventLogger(**logger)
@@ -50,6 +59,7 @@ def run(generator, processor, logger, topography, primary=None, comment=None):
 
     def filter_vertex(energy, position, direction):
         """Vertex filter based on the tau decay length.
+           TODO: check the grammage before as well.
         """
         # First let us compute the decay length, assuming no energy loss.
         dl = energy * 4.89639E-05
@@ -64,6 +74,12 @@ def run(generator, processor, logger, topography, primary=None, comment=None):
         # occured on the path to rocks.
         return math.exp(-dg / dl)
 
+    # Infer the energy threshold for showers from the generation model.
+    threshold = float("inf")
+    for _, opts in generator:
+        e0 = opts["energy"][0]
+        if e0 < threshold: threshold = e0
+
     # Main loop over events.
     requested, max_trials = processor["requested"], processor["trials"]
     trials, total_trials, done = 0, 0, 0
@@ -76,19 +92,19 @@ def run(generator, processor, logger, topography, primary=None, comment=None):
         # Generate a tentative decay vertex.
         trials += 1
         total_trials += 1
-        position, w0 = generate.position()
+        w0 = generate.model()
+        position, w1 = generate.position()
         if not topo.is_above(position): continue
-        direction, w1 = generate.direction(position, topo)
-        energy, w2 = generate.energy()
+        direction, w2 = generate.direction(position)
+        energy, w3 = generate.energy()
 
         # Check if the generated direction is relevant considering the
         # generated position and its energy.
-        w3 = filter_vertex(energy, position, direction)
-        if (w3 <= 0.) or (random.random() > w3) : continue
-        weight = w0 * w1 * w2 / w3
+        w4 = filter_vertex(energy, position, direction)
+        if (w4 <= 0.) or (random.random() > w4) : continue
+        weight = w0 * w1 * w2 * w3 / w4
 
         # Generate a valid tau decay, i.e. with enough energy for the shower.
-        threshold = generator["energy"][0]
         while True:
             decay = generate.decay(pid, energy, direction)
             shower_energy = 0.

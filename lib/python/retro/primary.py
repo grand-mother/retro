@@ -52,6 +52,14 @@ def PrimarySampler(primary, generator, topography, topo_handle):
         f.close()
         return name
 
+    # Compute the energy range.
+    emin, emax = float("inf"), 0.
+    for _, opts in generator:
+        e0, e1 = opts["energy"]
+        if e0 < emin: emin = e0
+        if e1 > emax: emax = e1
+    emax *= 1E+03
+
     # Configure for running DANTON.
     with ManageTemp():
         infile, outfile = get_tempfile(), get_tempfile()
@@ -62,8 +70,7 @@ def PrimarySampler(primary, generator, topography, topo_handle):
             "energy" : None,
             "weight" : particle }
         flux_model = [ "power-law", {
-            "energy" : [ generator["energy"][0],
-                         generator["energy"][1] * 1E+03 ],
+            "energy" : [ emin, emax ],
             "exponent" : -2.,
             "weight" : 1. }]
         card = {

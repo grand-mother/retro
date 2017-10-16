@@ -1,13 +1,17 @@
 {
         "comment": "This is an example of configuration file for",
-        "comment": "Ulastai, China, where the TREND and 21CMA experiments",
+        "comment": "Ulastai, China, where the 21CMA and TREND experiments",
         "comment": "are located.",
 
-        "generator" : {
-                "elevation" : [-10.0, 10.0],
-                "energy" : [1E+06, 1E+12],
-                "position" : [
-                        [-5E+04, 5E+04], [-5E+04, 5E+04], [-1E+03, 7E+03] ]},
+        "generator" :
+                [[ 1.0, {
+                        "elevation" : ["uniform", [-10.0, 10.0]],
+                        "energy" : [1E+06, 1E+12],
+                        "position" : [[-5E+04, 5E+04],
+                                      [-5E+04, 5E+04],
+                                      [0, 1E+03] ]}],
+                [ 2.0, {
+                        "elevation" : ["linear", [0.0, 10.0]] }]],
 
         "processor" : {
                 "requested" : 100,

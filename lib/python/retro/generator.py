@@ -18,34 +18,54 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import collections
 from ctypes import *
 import math
 import random
 import types
 
-def _PositionGenerator(position):
+def _PositionGenerator(position, topo_handle):
     """Closure for generating a tentative tau decay position.
     """
     x, y, z = position
     weight = (x[1] - x[0]) * (y[1] - y[0]) * (z[1] - z[0])
-    def generate(self):
-        return (random.uniform(*x), random.uniform(*y),
-                random.uniform(*z)), weight
+    def generate():
+        xi, yi = random.uniform(*x), random.uniform(*y)
+        zi = random.uniform(*z) + topo_handle.ground_altitude(xi, yi)
+        return (xi, yi, zi), weight
     return generate
 
-def _DirectionGenerator(elevation):
+def _DirectionGenerator(elevation, topo_handle):
     """Closure for generating a tentative tau direction before decay.
     """
     deg = math.pi / 180.
-    c0, c1 = (math.sin(x * deg) for x in elevation)
-    weight = (c1 - c0) * 2. * math.pi
-    def generate(self, position, topo_handle):
-        c = random.uniform(c0, c1)
-        elevation = -math.asin(c) / deg
-        azimuth = random.uniform(-180, 180.)
-        direction = topo_handle.horizontal_to_local(
-          position, azimuth, elevation)
-        return direction, weight
+    if isinstance(elevation[0], basestring): model, range_ = elevation
+    else: model, range_ = "uniform", elevation
+    c0, c1 = (math.sin(x * deg) for x in range_)
+    if model == "uniform":
+        weight = (c1 - c0) * 2. * math.pi
+        def generate(position):
+            c = random.uniform(c0, c1)
+            elevation = -math.asin(c) / deg
+            azimuth = random.uniform(-180, 180.)
+            direction = topo_handle.horizontal_to_local(
+              position, azimuth, elevation)
+            return direction, weight
+    elif model == "linear":
+        if c0 < 0.: raise ValueError("invalid range for linear pdf")
+        a, b = c0**2, (c1**2 - c0**2)
+        weight = b * math.pi
+        def generate(position):
+            while True:
+                c = (a + b * random.random())**0.5
+                if c > 0.: break
+            elevation = -math.asin(c) / deg
+            azimuth = random.uniform(-180, 180.)
+            direction = topo_handle.horizontal_to_local(
+              position, azimuth, elevation)
+            return direction, weight / c
+    else:
+        raise ValueError("invalid generation model for the direction")
     return generate
 
 def _EnergyGenerator(energy):
@@ -53,9 +73,26 @@ def _EnergyGenerator(energy):
     """
     e0 = energy[0]
     lnr = math.log(energy[1] / e0)
-    def generate(self):
+    def generate():
         e = e0 * math.exp(random.uniform(0., lnr))
         return e, e * lnr
+    return generate
+
+def _ModelGenerator(pdf):
+    """Closure for picking a generation model.
+    """
+    s, cdf, weight = 0., [], []
+    for p in pdf:
+        s += p
+        cdf.append(p)
+        weight.append(1. / p)
+
+    def generate(self):
+        u = random.random()
+        for i, ci in enumerate(cdf):
+            if u <= ci: break
+        self._current = self._models[i]
+        return weight[i]
     return generate
 
 # Handle for the ALOUETTE C library.
@@ -111,27 +148,44 @@ def _DecayGenerator():
 
 class Generator(object):
     """Generator for tau vertices, before decay."""
-    def __init__(self, position, elevation, energy):
-        # Implement the generation routines.
-        self.position = types.MethodType(_PositionGenerator(position), self)
-        self.direction = types.MethodType(_DirectionGenerator(elevation), self)
-        self.energy = types.MethodType(_EnergyGenerator(energy), self)
+    def __init__(self, generator, topo_handle):
+        # Build the generation routines.
+        total = sum(g[0] for g in generator)
+        models, pdf = [], []
+        GenerationModel = collections.namedtuple("GenerationModel",
+          ("position", "direction", "energy"))
+        for weight, opts in generator:
+            pdf.append(weight / total)
+            models.append(GenerationModel(
+                _PositionGenerator(opts["position"], topo_handle),
+                _DirectionGenerator(opts["elevation"], topo_handle),
+                _EnergyGenerator(opts["energy"])))
+        self._models = models
+        self._current = models[0]
+
+        # Overwrite the pick and decay methods.
+        self.model = types.MethodType(_ModelGenerator(pdf), self)
         self.decay = types.MethodType(_DecayGenerator(), self)
+
+    def model(self):
+        """Randomly select a generation model.
+        """
+        pass
 
     def position(self):
         """Generate a tentative tau decay position.
         """
-        pass
+        return self._current.position()
 
-    def direction(self):
+    def direction(self, position):
         """Generate a tentative tau direction before decay.
         """
-        pass
+        return self._current.direction(position)
 
     def energy(self):
         """Generate a tentative tau energy before decay..
         """
-        pass
+        return self._current.energy()
 
     def decay(self, pid, energy, direction):
         """Generate a tentative tau decay.
