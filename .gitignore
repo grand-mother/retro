@@ -1,14 +1,15 @@
 # Ignore binaries
 bin
-*.so
-*.a
-*.b
-*.pyc
-*.pyo
-lib/python/*.py
+
+# ignore lib
+lib
+!lib/python/retro
 
 # Ignore topographic data (too large).
 share/topography
+
+# Ignore generated events.
+events-*.json
 
 # Ignore plugins.
 plugins
