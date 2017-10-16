@@ -26,9 +26,10 @@ import random
 # Custom import(s)
 from retro.event import EventLogger
 from retro.generator import Generator
+from retro.primary import PrimarySampler
 from grand_tour import Topography
 
-def run(generator, processor, logger, topography, comment=None):
+def run(generator, processor, logger, topography, primary=None, comment=None):
     """Generate some tau decay vertices according to the provided settings.
     """
 
@@ -38,8 +39,14 @@ def run(generator, processor, logger, topography, comment=None):
     # Instanciate a generator for the taus at decay.
     generate = Generator(**generator)
 
-    # Instanciate and event logger.
+    # Instanciate an event logger.
     log_event = EventLogger(**logger)
+
+    # Initialise the primary sampler.
+    if primary:
+        sample_primaries = PrimarySampler(primary, generator, topography, topo)
+    else:
+        sample_primaries = lambda : []
 
     def filter_vertex(energy, position, direction):
         """Vertex filter based on the tau decay length.
@@ -60,6 +67,7 @@ def run(generator, processor, logger, topography, comment=None):
     # Main loop over events.
     requested, max_trials = processor["requested"], processor["trials"]
     trials, total_trials, done = 0, 0, 0
+    pid = 15
     while True:
         # Check the termination conditions.
         if requested and (done == requested): break
@@ -82,10 +90,10 @@ def run(generator, processor, logger, topography, comment=None):
         # Generate a valid tau decay, i.e. with enough energy for the shower.
         threshold = generator["energy"][0]
         while True:
-            decay = generate.decay(15, energy, direction)
+            decay = generate.decay(pid, energy, direction)
             shower_energy = 0.
-            for (pid, momentum) in decay:
-                aid = abs(pid)
+            for (pid_, momentum) in decay:
+                aid = abs(pid_)
                 if aid in (12, 13, 14, 16): continue
                 shower_energy += sum(m**2 for m in momentum)**0.5
             if shower_energy >= threshold: break
@@ -94,9 +102,12 @@ def run(generator, processor, logger, topography, comment=None):
         # TODO: check if the shower would be relevant for radio detection,
         # considering its energy, it direction, the topography, etc ...
 
+        # Sample the primary flux.
+        primaries = sample_primaries(pid, position, energy, direction)
+
         # Log the event.
         log_event(tau_at_decay=(energy, position, direction), decay=decay,
-            statistics=(weight, trials))
+            primaries=primaries, statistics=(weight, trials))
         trials = 0
         done += 1
 

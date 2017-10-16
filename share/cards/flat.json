@@ -17,5 +17,9 @@
         "topography" : {
                 "latitude" : 43,
                 "longitude" : 87,
-                "path" : "flat/2" }
+                "path" : "flat/2" },
+
+        "primary" : {
+                "events" : 100,
+                "longitudinal" : false }
 }

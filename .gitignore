@@ -1,9 +1,15 @@
 # Ignore binaries
 bin
 
-# ignore lib
-lib
+# Ignore DANTON/PUMAS temporary dump.
+materials.b
+
+# ignore lib except lib/python/retro.
+lib/*
+!lib/python
+lib/python/*
 !lib/python/retro
+lib/python/retro/*.pyc
 
 # Ignore topographic data (too large).
 share/topography
