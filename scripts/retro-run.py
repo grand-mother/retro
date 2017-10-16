@@ -46,7 +46,7 @@ def run(generator, processor, logger, topography, primary=None, comment=None):
     if primary:
         sample_primaries = PrimarySampler(primary, generator, topography, topo)
     else:
-        sample_primaries = lambda : []
+        sample_primaries = lambda pid, position, energy, direction: []
 
     def filter_vertex(energy, position, direction):
         """Vertex filter based on the tau decay length.
@@ -73,12 +73,12 @@ def run(generator, processor, logger, topography, primary=None, comment=None):
         if requested and (done == requested): break
         if max_trials and (total_trials >= max_trials): break
 
-        # Generate a tentative decay vretex.
+        # Generate a tentative decay vertex.
         trials += 1
         total_trials += 1
         position, w0 = generate.position()
         if not topo.is_above(position): continue
-        direction, w1 = generate.direction()
+        direction, w1 = generate.direction(position, topo)
         energy, w2 = generate.energy()
 
         # Check if the generated direction is relevant considering the

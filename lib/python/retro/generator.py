@@ -39,11 +39,13 @@ def _DirectionGenerator(elevation):
     deg = math.pi / 180.
     c0, c1 = (math.sin(x * deg) for x in elevation)
     weight = (c1 - c0) * 2. * math.pi
-    def generate(self):
+    def generate(self, position, topo_handle):
         c = random.uniform(c0, c1)
-        s = math.sqrt(1. - c * c)
-        phi = random.uniform(0., 2. * math.pi)
-        return (-s * math.cos(phi), -s*math.sin(phi), -c), weight
+        elevation = -math.asin(c) / deg
+        azimuth = random.uniform(-180, 180.)
+        direction = topo_handle.horizontal_to_local(
+          position, azimuth, elevation)
+        return direction, weight
     return generate
 
 def _EnergyGenerator(energy):
