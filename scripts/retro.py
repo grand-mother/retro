@@ -95,7 +95,7 @@ def run(generator, processor, logger, topography, comment=None):
         # Then let us compute the distance to the topography, propagating
         # backwards.
         dg = topo.distance(
-          position, tuple([-c for c in direction]), limit=10. * dl)
+          position, [-c for c in direction], limit=10. * dl)
         if dg is None: return 0.
 
         # As selection weight, let us consider the probability that no decay
