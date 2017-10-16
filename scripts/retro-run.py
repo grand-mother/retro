@@ -41,8 +41,8 @@ def run(generator, processor, logger, topography, comment=None):
     # Instanciate and event logger.
     log_event = EventLogger(**logger)
 
-    def filter_event(energy, position, direction):
-        """Raw event filter from first principles.
+    def filter_vertex(energy, position, direction):
+        """Vertex filter based on the tau decay length.
         """
         # First let us compute the decay length, assuming no energy loss.
         dl = energy * 4.89639E-05
@@ -65,7 +65,7 @@ def run(generator, processor, logger, topography, comment=None):
         if requested and (done == requested): break
         if max_trials and (total_trials >= max_trials): break
 
-        # Generate a tentative tau decay.
+        # Generate a tentative decay vretex.
         trials += 1
         total_trials += 1
         position, w0 = generate.position()
@@ -74,15 +74,29 @@ def run(generator, processor, logger, topography, comment=None):
         energy, w2 = generate.energy()
 
         # Check if the generated direction is relevant considering the
-        # generated position and energy.
-        w3 = filter_event(energy, position, direction)
+        # generated position and its energy.
+        w3 = filter_vertex(energy, position, direction)
         if (w3 <= 0.) or (random.random() > w3) : continue
         weight = w0 * w1 * w2 / w3
 
-        # TODO: decay the tau with danton, or alouette.
+        # Generate a valid tau decay, i.e. with enough energy for the shower.
+        threshold = generator["energy"][0]
+        while True:
+            decay = generate.decay(15, energy, direction)
+            shower_energy = 0.
+            for (pid, momentum) in decay:
+                aid = abs(pid)
+                if aid in (12, 13, 14, 16): continue
+                shower_energy += sum(m**2 for m in momentum)**0.5
+            if shower_energy >= threshold: break
+            trials += 1
 
-        # Log the decay.
-        log_event(energy, position, direction, weight, trials)
+        # TODO: check if the shower would be relevant for radio detection,
+        # considering its energy, it direction, the topography, etc ...
+
+        # Log the event.
+        log_event(tau_at_decay=(energy, position, direction), decay=decay,
+            statistics=(weight, trials))
         trials = 0
         done += 1
 

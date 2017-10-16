@@ -29,8 +29,9 @@ class EventLogger:
         with open(path, "w+") as f: pass
         self._previous = -1
 
-    def __call__(self, *args):
-        event = { "previous" : self._previous, "tau_at_decay" : args }
+    def __call__(self, **kwargs):
+        event = { "previous" : self._previous }
+        event.update(kwargs)
         with open(self._path, "a") as f:
             self._previous = f.tell()
             json.dump(event, f)

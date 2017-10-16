@@ -18,6 +18,7 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+from ctypes import *
 import math
 import random
 import types
@@ -55,6 +56,57 @@ def _EnergyGenerator(energy):
         return e, e * lnr
     return generate
 
+# Handle for the ALOUETTE C library.
+_alouette = None
+
+class AlouetteError(Exception):
+    """Custom exception for an ALOUETTE library error.
+    """
+    def __init__(self, rc):
+        message = _alouette.alouette_strerror(rc)
+        super(AlouetteError, self).__init__(
+          "alouette error ({:})".format(message))
+        self.rc = rc
+
+def _DecayGenerator():
+    """Closure for decaying a tau.
+    """
+    global _alouette
+    if _alouette is None:
+        # Load the C library.
+        lib = cdll.LoadLibrary("libalouette.so")
+
+        # Prototypes.
+        lib.alouette_initialise.argtypes = (c_int, POINTER(c_int))
+        lib.alouette_strerror.argtypes = (c_int,)
+        lib.alouette_strerror.restype = c_char_p
+        lib.alouette_decay.argtypes = (
+          c_int, POINTER(c_double), POINTER(c_double))
+        lib.alouette_product.argtypes = (POINTER(c_int), POINTER(c_double))
+
+        # Initialise with a random seed.
+        seed = c_int(random.randint(0, 2**32 - 1))
+        rc = lib.alouette_initialise(1, byref(seed))
+        if rc != 0: raise AlouetteError(rc)
+
+        _alouette = lib
+
+    def generate(self, pid, energy, direction):
+        m = 1.77682
+        p = math.sqrt((energy - m) * (energy + m))
+        momentum = (3 * c_double)(*[x * p for x in direction])
+        polarisation = (3 * c_double)(*direction)
+        rc = _alouette.alouette_decay(pid, momentum, polarisation)
+        if rc != 0: raise AlouetteError(rc)
+        pid = c_int(0)
+        products = []
+        while True:
+            rc = _alouette.alouette_product(byref(pid), momentum)
+            if rc != 0: break
+            products.append([pid.value, [x for x in momentum]])
+        return products
+    return generate
+
 class Generator(object):
     """Generator for tau vertices, before decay."""
     def __init__(self, position, elevation, energy):
@@ -62,6 +114,7 @@ class Generator(object):
         self.position = types.MethodType(_PositionGenerator(position), self)
         self.direction = types.MethodType(_DirectionGenerator(elevation), self)
         self.energy = types.MethodType(_EnergyGenerator(energy), self)
+        self.decay = types.MethodType(_DecayGenerator(), self)
 
     def position(self):
         """Generate a tentative tau decay position.
@@ -75,5 +128,10 @@ class Generator(object):
 
     def energy(self):
         """Generate a tentative tau energy before decay..
+        """
+        pass
+
+    def decay(self, pid, energy, direction):
+        """Generate a tentative tau decay.
         """
         pass
