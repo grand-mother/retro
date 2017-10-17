@@ -28,6 +28,9 @@ e.g. [share/cards/ulastai.json](share/cards/ulastai.json). Then run:
 retro-run share/cards/ulastai.json
 ```
 
+Note that you'll need to _initialise you environment first_, e.g.
+`source setup.sh`.
+
 ## License
 
 The RETRO suite is under the **GNU LGPLv3** license. See the provided

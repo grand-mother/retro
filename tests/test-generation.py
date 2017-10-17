@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# This is a test procedure. It shows the distribution of the elevation angle
+# of selected events.
+
 import numpy
 import pylab
 from retro.event import EventIterator

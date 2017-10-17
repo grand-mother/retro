@@ -97,7 +97,7 @@ def PrimarySampler(primary, generator, topography, topo_handle):
             # Configure the sampler.
             sampler["altitude"] = topo_handle.local_to_lla(position)[2]
             _, elevation = topo_handle.local_to_horizontal(position, direction)
-            sampler["elevation"] = elevation # TODO: correct for altitude.
+            sampler["elevation"] = elevation
             sampler["energy"] = energy
             if pid > 0.: particle["tau"], particle["tau~"] = 1., 0.
             else: particle["tau"], particle["tau~"] = 0., 1.
