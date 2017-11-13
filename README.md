@@ -25,11 +25,11 @@ In order to run a simulation you'll need a configuration card,
 e.g. [share/cards/ulastai.json](share/cards/ulastai.json). Then run:
 
 ```bash
+. setup.sh
 retro-run share/cards/ulastai.json
 ```
 
-Note that you'll need to _initialise you environment first_, e.g.
-`source setup.sh`.
+Note that you'll need to _initialise you environment only once_, i.e. `. setup.sh`.
 
 ## License
 
