@@ -24,5 +24,9 @@
                 "latitude" : 42.928056,
                 "longitude" : 86.741667,
                 "path" : "share/topography",
-                "stack_size" : 25 }
+                "stack_size" : 25 },
+
+        "antenna" : {
+                "position": "share/setup/ulastai-positions-30x30.json"
+        }
 }

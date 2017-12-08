@@ -30,7 +30,8 @@ from retro.generator import Generator
 from retro.primary import PrimarySampler
 from grand_tour import Topography
 
-def run(generator, processor, logger, topography, primary=None, comment=None):
+def run(generator, processor, logger, topography, primary=None, antenna=None,
+        comment=None):
     """Generate some tau decay vertices according to the provided settings.
     """
 
@@ -56,6 +57,11 @@ def run(generator, processor, logger, topography, primary=None, comment=None):
         sample_primaries = PrimarySampler(primary, generator, topography, topo)
     else:
         sample_primaries = lambda pid, position, energy, direction: []
+
+    # Initialise the preselector
+    if antenna is not None:
+        from retro.preselector import Preselector
+        preselector = Preselector(topo, antenna)
 
     def filter_vertex(energy, position, direction):
         """Vertex filter based on the tau decay length.
@@ -115,15 +121,21 @@ def run(generator, processor, logger, topography, primary=None, comment=None):
             if shower_energy >= threshold: break
             trials += 1
 
-        # TODO: check if the shower would be relevant for radio detection,
-        # considering its energy, it direction, the topography, etc ...
+        # Preselect antennas that might detect the radio signal from the shower
+        if antenna is not None:
+            selection = preselector(shower_energy, position, direction)
+            if len(selection) < 4:
+                continue
+        else:
+            selection = None
 
         # Sample the primary flux.
         primaries = sample_primaries(pid, position, energy, direction)
 
         # Log the event.
         log_event(tau_at_decay=(energy, position, direction), decay=decay,
-            primaries=primaries, statistics=(weight, trials))
+            primaries=primaries, statistics=(weight, trials),
+            antennas=selection)
         trials = 0
         done += 1
 

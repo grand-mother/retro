@@ -11,8 +11,9 @@ lib/python/*
 !lib/python/retro
 lib/python/retro/*.pyc
 
-# Ignore topographic data (too large).
+# Ignore topographic and setup data (too large).
 share/topography
+share/setup
 
 # Ignore generated events.
 events-*.json
