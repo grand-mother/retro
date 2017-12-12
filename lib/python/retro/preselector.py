@@ -34,10 +34,9 @@ def Preselector(topography, antenna):
 
     def preselect(shower_energy, position, direction):
         # Cone parameters
-        gamma = (numpy.deg2rad(0.42) * numpy.log10(shower_energy / 1E+08) +
-                 numpy.deg2rad(0.45))
-        zcmin = 14000.  # m
-        zcmax = 27000. * numpy.log10(shower_energy / 1E+08) + 22000.  # m
+        gamma = numpy.deg2rad(3.)
+        zcmin = 14E+03  # m
+        zcmax = 165E+03 * shower_energy / 1E+09 + 55E+03  # m
 
         # Check if the shower crashes into a mountain early, before xmax
         s = numpy.arange(0., zcmin + deltar, deltar)
