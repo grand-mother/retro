@@ -25,29 +25,37 @@ import tempfile
 # Custom imports.
 import danton
 
+
 class DantonError(Exception):
     """Custom exception for a DANTON error.
     """
+
     def __init__(self, message):
         super(DantonError, self).__init__(message)
+
 
 def PrimarySampler(primary, generator, topography, topo_handle):
     """Closure for sampling the primary flux with DANTON.
     """
     infile, outfile = "", ""
+
     class ManageTemp:
         """Context for ensuring that temporary files are deleted at exit.
         """
+
         def __enter__(self): pass
+
         def __exit__(self, type, value, traceback):
-            if os.path.exists(infile): os.remove(infile)
-            if os.path.exists(outfile): os.remove(outfile)
+            if os.path.exists(infile):
+                os.remove(infile)
+            if os.path.exists(outfile):
+                os.remove(outfile)
 
     def get_tempfile():
         """Utility function for getting a reusable temporary file.
         """
         f = tempfile.NamedTemporaryFile(
-          prefix="retro.", suffix=".json", dir=".", delete=False)
+            prefix="retro.", suffix=".json", dir=".", delete=False)
         name = f.name
         f.close()
         return name
@@ -56,36 +64,38 @@ def PrimarySampler(primary, generator, topography, topo_handle):
     emin, emax = float("inf"), 0.
     for _, opts in generator:
         e0, e1 = opts["energy"]
-        if e0 < emin: emin = e0
-        if e1 > emax: emax = e1
+        if e0 < emin:
+            emin = e0
+        if e1 > emax:
+            emax = e1
     emax *= 1E+03
 
     # Configure for running DANTON.
     with ManageTemp():
         infile, outfile = get_tempfile(), get_tempfile()
-        particle = { "tau" : None, "tau~" : None }
+        particle = {"tau": None, "tau~": None}
         sampler = {
-            "altitude" : None,
-            "elevation" : None,
-            "energy" : None,
-            "weight" : particle }
-        flux_model = [ "power-law", {
-            "energy" : [ emin, emax ],
-            "exponent" : -2.,
-            "weight" : 1. }]
+            "altitude": None,
+            "elevation": None,
+            "energy": None,
+            "weight": particle}
+        flux_model = ["power-law", {
+            "energy": [emin, emax],
+            "exponent": -2.,
+            "weight": 1.}]
         card = {
-            "events" : primary["events"],
-            "output-file" : outfile,
-            "mode" : "backward",
-            "longitudinal" : primary["longitudinal"],
-            "decay" : False,
-            "particle-sampler" : sampler,
-            "primary-flux" : {
-                "nu_tau" : flux_model,
-                "nu_tau~" : flux_model }}
+            "events": primary["events"],
+            "output-file": outfile,
+            "mode": "backward",
+            "longitudinal": primary["longitudinal"],
+            "decay": False,
+            "particle-sampler": sampler,
+            "primary-flux": {
+                "nu_tau": flux_model,
+                "nu_tau~": flux_model}}
         flat = topography["path"].startswith("flat")
         if flat:
-            card["earth-model"] = { "sea" : False }
+            card["earth-model"] = {"sea": False}
         else:
             raise ValueError("non flat topography is not yet supported")
         run_cmd = "danton {:}".format(infile)
@@ -99,20 +109,25 @@ def PrimarySampler(primary, generator, topography, topo_handle):
             _, elevation = topo_handle.local_to_horizontal(position, direction)
             sampler["elevation"] = elevation
             sampler["energy"] = energy
-            if pid > 0.: particle["tau"], particle["tau~"] = 1., 0.
-            else: particle["tau"], particle["tau~"] = 0., 1.
+            if pid > 0.:
+                particle["tau"], particle["tau~"] = 1., 0.
+            else:
+                particle["tau"], particle["tau~"] = 0., 1.
 
             # Dump the steering card.
-            with open(infile, "wb+") as f: json.dump(card, f)
+            with open(infile, "wb+") as f:
+                json.dump(card, f)
 
             # Run DANTON.
             p = subprocess.Popen(run_cmd, shell=True, stdout=subprocess.PIPE,
-              stderr=subprocess.PIPE)
+                                 stderr=subprocess.PIPE)
             _, stderr = p.communicate()
-            if stderr: raise DantonError(stderr)
+            if stderr:
+                raise DantonError(stderr)
 
             # Parse the result.
-            if not os.path.exists(outfile): return []
+            if not os.path.exists(outfile):
+                return []
             primaries = []
             for event in danton.iter_event(outfile):
                 primaries.append([event.weight, event.primary.energy])

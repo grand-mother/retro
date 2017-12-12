@@ -30,6 +30,7 @@ from retro.generator import Generator
 from retro.primary import PrimarySampler
 from grand_tour import Topography
 
+
 def run(generator, processor, logger, topography, primary=None, antenna=None,
         comment=None):
     """Generate some tau decay vertices according to the provided settings.
@@ -41,7 +42,7 @@ def run(generator, processor, logger, topography, primary=None, antenna=None,
     # Instanciate a generator for the taus at decay. First let us vectorize
     # and flatten the options.
     if isinstance(generator, dict):
-        generator = [[1., generator],]
+        generator = [[1., generator], ]
     for i, (w, opts) in enumerate(generator):
         if i > 0:
             new = copy.deepcopy(generator[i - 1][1])
@@ -56,7 +57,7 @@ def run(generator, processor, logger, topography, primary=None, antenna=None,
     if primary:
         sample_primaries = PrimarySampler(primary, generator, topography, topo)
     else:
-        sample_primaries = lambda pid, position, energy, direction: []
+        def sample_primaries(pid, position, energy, direction): return []
 
     # Initialise the preselector
     if antenna is not None:
@@ -73,8 +74,9 @@ def run(generator, processor, logger, topography, primary=None, antenna=None,
         # Then let us compute the distance to the topography, propagating
         # backwards.
         dg = topo.distance(
-          position, [-c for c in direction], limit=10. * dl)
-        if dg is None: return 0.
+            position, [-c for c in direction], limit=10. * dl)
+        if dg is None:
+            return 0.
 
         # As selection weight, let us consider the probability that no decay
         # occured on the path to rocks.
@@ -84,7 +86,8 @@ def run(generator, processor, logger, topography, primary=None, antenna=None,
     threshold = float("inf")
     for _, opts in generator:
         e0 = opts["energy"][0]
-        if e0 < threshold: threshold = e0
+        if e0 < threshold:
+            threshold = e0
 
     # Main loop over events.
     requested, max_trials = processor["requested"], processor["trials"]
@@ -92,22 +95,26 @@ def run(generator, processor, logger, topography, primary=None, antenna=None,
     pid = 15
     while True:
         # Check the termination conditions.
-        if requested and (done == requested): break
-        if max_trials and (total_trials >= max_trials): break
+        if requested and (done == requested):
+            break
+        if max_trials and (total_trials >= max_trials):
+            break
 
         # Generate a tentative decay vertex.
         trials += 1
         total_trials += 1
         w0 = generate.model()
         position, w1 = generate.position()
-        if not topo.is_above(position): continue
+        if not topo.is_above(position):
+            continue
         direction, w2 = generate.direction(position)
         energy, w3 = generate.energy()
 
         # Check if the generated direction is relevant considering the
         # generated position and its energy.
         w4 = filter_vertex(energy, position, direction)
-        if (w4 <= 0.) or (random.random() > w4) : continue
+        if (w4 <= 0.) or (random.random() > w4):
+            continue
         weight = w0 * w1 * w2 * w3 / w4
 
         # Generate a valid tau decay, i.e. with enough energy for the shower.
@@ -116,9 +123,11 @@ def run(generator, processor, logger, topography, primary=None, antenna=None,
             shower_energy = 0.
             for (pid_, momentum) in decay:
                 aid = abs(pid_)
-                if aid in (12, 13, 14, 16): continue
+                if aid in (12, 13, 14, 16):
+                    continue
                 shower_energy += sum(m**2 for m in momentum)**0.5
-            if shower_energy >= threshold: break
+            if shower_energy >= threshold:
+                break
             trials += 1
 
         # Preselect antennas that might detect the radio signal from the shower
@@ -139,7 +148,9 @@ def run(generator, processor, logger, topography, primary=None, antenna=None,
         trials = 0
         done += 1
 
+
 if __name__ == "__main__":
     # Read the settings from a JSON card.
-    with open(sys.argv[1]) as f: settings = json.load(f)
+    with open(sys.argv[1]) as f:
+        settings = json.load(f)
     run(**settings)

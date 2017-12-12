@@ -20,25 +20,30 @@
 
 import json
 
+
 class EventLogger:
     """Encapsulation for logging events in JSON format.
     """
+
     def __init__(self, path):
         event = {}
         self._path = path
-        with open(path, "w+") as f: pass
+        with open(path, "w+") as f:
+            pass
         self._previous = -1
 
     def __call__(self, **kwargs):
-        event = { "previous" : self._previous }
+        event = {"previous": self._previous}
         event.update(kwargs)
         with open(self._path, "a") as f:
             self._previous = f.tell()
             json.dump(event, f)
             f.write("\n")
 
+
 class EventIterator:
     """Iterator over events stored in a JSON file."""
+
     def __init__(self, path):
         f = open(path)
         self._file = f
@@ -56,16 +61,20 @@ class EventIterator:
 
     def next(self):
         """Pop the next event from file."""
-        try: event = json.loads(self._file.readline())
-        except ValueError: raise StopIteration()
+        try:
+            event = json.loads(self._file.readline())
+        except ValueError:
+            raise StopIteration()
         self._prev = event["previous"]
         self._current = event
         return event
 
     def previous(self):
         """Pop the previous event from file."""
-        if self._prev >= 0: self._file.seek(self._prev, 0)
-        else: self._file.seek(0, 0)
+        if self._prev >= 0:
+            self._file.seek(self._prev, 0)
+        else:
+            self._file.seek(0, 0)
         return self.next()
 
     def rewind(self):

@@ -26,59 +26,71 @@ import random
 import struct
 import types
 
+
 def _PositionGenerator(position, topo_handle):
     """Closure for generating a tentative tau decay position.
     """
     x, y, z = position
     weight = (x[1] - x[0]) * (y[1] - y[0]) * (z[1] - z[0])
+
     def generate():
         xi, yi = random.uniform(*x), random.uniform(*y)
         zi = random.uniform(*z) + topo_handle.ground_altitude(xi, yi)
         return (xi, yi, zi), weight
     return generate
 
+
 def _DirectionGenerator(elevation, topo_handle):
     """Closure for generating a tentative tau direction before decay.
     """
     deg = math.pi / 180.
-    if isinstance(elevation[0], basestring): model, range_ = elevation
-    else: model, range_ = "uniform", elevation
+    if isinstance(elevation[0], basestring):
+        model, range_ = elevation
+    else:
+        model, range_ = "uniform", elevation
     c0, c1 = (math.sin(x * deg) for x in range_)
     if model == "uniform":
         weight = (c1 - c0) * 2. * math.pi
+
         def generate(position):
             c = random.uniform(c0, c1)
             elevation = -math.asin(c) / deg
             azimuth = random.uniform(-180, 180.)
             direction = topo_handle.horizontal_to_local(
-              position, azimuth, elevation)
+                position, azimuth, elevation)
             return direction, weight
     elif model == "linear":
-        if c0 < 0.: raise ValueError("invalid range for linear pdf")
+        if c0 < 0.:
+            raise ValueError("invalid range for linear pdf")
         a, b = c0**2, (c1**2 - c0**2)
         weight = b * math.pi
+
         def generate(position):
             while True:
                 c = (a + b * random.random())**0.5
-                if c > 0.: break
+                if c > 0.:
+                    break
             elevation = -math.asin(c) / deg
             azimuth = random.uniform(-180, 180.)
             direction = topo_handle.horizontal_to_local(
-              position, azimuth, elevation)
+                position, azimuth, elevation)
             return direction, weight / c
     else:
         raise ValueError("invalid generation model for the direction")
     return generate
+
 
 def _EnergyGenerator(energy):
     """Closure for generating a tentative tau energy before decay.
     """
     e0 = energy[0]
     lnr = math.log(energy[1] / e0)
+
     def generate():
         e = e0 * math.exp(random.uniform(0., lnr))
         return e, e * lnr
     return generate
+
 
 def _ModelGenerator(pdf):
     """Closure for picking a generation model.
@@ -92,22 +104,27 @@ def _ModelGenerator(pdf):
     def generate(self):
         u = random.random()
         for i, ci in enumerate(cdf):
-            if u <= ci: break
+            if u <= ci:
+                break
         self._current = self._models[i]
         return weight[i]
     return generate
 
+
 # Handle for the ALOUETTE C library.
 _alouette = None
+
 
 class AlouetteError(Exception):
     """Custom exception for an ALOUETTE library error.
     """
+
     def __init__(self, rc):
         message = _alouette.alouette_strerror(rc)
         super(AlouetteError, self).__init__(
-          "alouette error ({:})".format(message))
+            "alouette error ({:})".format(message))
         self.rc = rc
+
 
 def _DecayGenerator():
     """Closure for decaying a tau.
@@ -122,14 +139,15 @@ def _DecayGenerator():
         lib.alouette_strerror.argtypes = (c_int,)
         lib.alouette_strerror.restype = c_char_p
         lib.alouette_decay.argtypes = (
-          c_int, POINTER(c_double), POINTER(c_double))
+            c_int, POINTER(c_double), POINTER(c_double))
         lib.alouette_product.argtypes = (POINTER(c_int), POINTER(c_double))
         lib.alouette_random_state.argtypes = (POINTER(c_uint),)
 
         # Initialise with a random seed.
         state = (3 * c_uint)((random.randint(0, 900000000)), 0, 0)
         rc = lib.alouette_initialise(1, state)
-        if rc != 0: raise AlouetteError(rc)
+        if rc != 0:
+            raise AlouetteError(rc)
 
         _alouette = lib
 
@@ -144,24 +162,29 @@ def _DecayGenerator():
                                            state[0], energy)).lstrip("0")
 
         rc = _alouette.alouette_decay(pid, momentum, polarisation)
-        if rc != 0: raise AlouetteError(rc)
+        if rc != 0:
+            raise AlouetteError(rc)
         pid = c_int(0)
         products = []
         while True:
             rc = _alouette.alouette_product(byref(pid), momentum)
-            if rc != 0: break
+            if rc != 0:
+                break
             products.append([pid.value, [x for x in momentum]])
         return tag, products
     return generate
 
+
 class Generator(object):
     """Generator for tau vertices, before decay."""
+
     def __init__(self, generator, topo_handle):
         # Build the generation routines.
         total = sum(g[0] for g in generator)
         models, pdf = [], []
         GenerationModel = collections.namedtuple("GenerationModel",
-          ("position", "direction", "energy"))
+                                                 ("position", "direction",
+                                                  "energy"))
         for weight, opts in generator:
             pdf.append(weight / total)
             models.append(GenerationModel(
