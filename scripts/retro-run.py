@@ -112,7 +112,7 @@ def run(generator, processor, logger, topography, primary=None, antenna=None,
 
         # Generate a valid tau decay, i.e. with enough energy for the shower.
         while True:
-            decay = generate.decay(pid, energy, direction)
+            tag, decay = generate.decay(pid, energy, direction)
             shower_energy = 0.
             for (pid_, momentum) in decay:
                 aid = abs(pid_)
@@ -133,9 +133,9 @@ def run(generator, processor, logger, topography, primary=None, antenna=None,
         primaries = sample_primaries(pid, position, energy, direction)
 
         # Log the event.
-        log_event(tau_at_decay=(energy, position, direction), decay=decay,
-            primaries=primaries, statistics=(weight, trials),
-            antennas=selection)
+        log_event(tag=tag, tau_at_decay=(energy, position, direction),
+                  decay=decay, primaries=primaries, statistics=(weight, trials),
+                  antennas=selection)
         trials = 0
         done += 1
 

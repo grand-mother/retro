@@ -18,10 +18,12 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>
 
+import binascii
 import collections
 from ctypes import *
 import math
 import random
+import struct
 import types
 
 def _PositionGenerator(position, topo_handle):
@@ -116,16 +118,17 @@ def _DecayGenerator():
         lib = cdll.LoadLibrary("libalouette.so")
 
         # Prototypes.
-        lib.alouette_initialise.argtypes = (c_int, POINTER(c_int))
+        lib.alouette_initialise.argtypes = (c_int, POINTER(c_uint))
         lib.alouette_strerror.argtypes = (c_int,)
         lib.alouette_strerror.restype = c_char_p
         lib.alouette_decay.argtypes = (
           c_int, POINTER(c_double), POINTER(c_double))
         lib.alouette_product.argtypes = (POINTER(c_int), POINTER(c_double))
+        lib.alouette_random_state.argtypes = (POINTER(c_uint),)
 
         # Initialise with a random seed.
-        seed = c_int(random.randint(0, 2**32 - 1))
-        rc = lib.alouette_initialise(1, byref(seed))
+        state = (3 * c_uint)((random.randint(0, 900000000)), 0, 0)
+        rc = lib.alouette_initialise(1, state)
         if rc != 0: raise AlouetteError(rc)
 
         _alouette = lib
@@ -135,6 +138,11 @@ def _DecayGenerator():
         p = math.sqrt((energy - m) * (energy + m))
         momentum = (3 * c_double)(*[x * p for x in direction])
         polarisation = (3 * c_double)(*direction)
+        state = (3 * c_uint)()
+        _alouette.alouette_random_state(state)
+        tag = binascii.hexlify(struct.pack("!IIId", state[2], state[1],
+                                           state[0], energy)).lstrip("0")
+
         rc = _alouette.alouette_decay(pid, momentum, polarisation)
         if rc != 0: raise AlouetteError(rc)
         pid = c_int(0)
@@ -143,7 +151,7 @@ def _DecayGenerator():
             rc = _alouette.alouette_product(byref(pid), momentum)
             if rc != 0: break
             products.append([pid.value, [x for x in momentum]])
-        return products
+        return tag, products
     return generate
 
 class Generator(object):
