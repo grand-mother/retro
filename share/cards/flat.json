@@ -2,13 +2,13 @@
         "comment" : "This is an example card with a flat topography.",
 
         "generator" : {
-                "elevation" : [-10.0, 0.0],
+                "theta" : [90.0, 100.0],
                 "energy" : [1E+06, 1E+12],
                 "position" : [
                         [-5E+04, 5E+04], [-5E+04, 5E+04], [0, 1E+03] ]},
 
         "processor" : {
-                "requested" : 100,
+                "requested" : 3,
                 "trials" : null },
 
         "logger" : {

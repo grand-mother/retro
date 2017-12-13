@@ -76,7 +76,7 @@ def PrimarySampler(primary, generator, topography, topo_handle):
         particle = {"tau": None, "tau~": None}
         sampler = {
             "altitude": None,
-            "elevation": None,
+            "theta": None,
             "energy": None,
             "weight": particle}
         flux_model = ["power-law", {
@@ -106,8 +106,8 @@ def PrimarySampler(primary, generator, topography, topo_handle):
         with ManageTemp():
             # Configure the sampler.
             sampler["altitude"] = topo_handle.local_to_lla(position)[2]
-            _, elevation = topo_handle.local_to_horizontal(position, direction)
-            sampler["elevation"] = elevation
+            theta, _ = topo_handle.local_to_angular(position, direction)
+            sampler["theta"] = theta
             sampler["energy"] = energy
             if pid > 0.:
                 particle["tau"], particle["tau~"] = 1., 0.

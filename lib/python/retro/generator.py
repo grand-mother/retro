@@ -40,24 +40,23 @@ def _PositionGenerator(position, topo_handle):
     return generate
 
 
-def _DirectionGenerator(elevation, topo_handle):
+def _DirectionGenerator(theta, topo_handle):
     """Closure for generating a tentative tau direction before decay.
     """
     deg = math.pi / 180.
-    if isinstance(elevation[0], basestring):
-        model, range_ = elevation
+    if isinstance(theta[0], basestring):
+        model, range_ = theta
     else:
-        model, range_ = "uniform", elevation
-    c0, c1 = (math.sin(x * deg) for x in range_)
+        model, range_ = "uniform", theta
+    c1, c0 = (math.cos(x * deg) for x in range_)
     if model == "uniform":
         weight = (c1 - c0) * 2. * math.pi
 
         def generate(position):
             c = random.uniform(c0, c1)
-            elevation = -math.asin(c) / deg
-            azimuth = random.uniform(-180, 180.)
-            direction = topo_handle.horizontal_to_local(
-                position, azimuth, elevation)
+            theta = math.acos(c) / deg
+            phi = random.uniform(-180, 180.)
+            direction = topo_handle.angular_to_local(position, theta, phi)
             return direction, weight
     elif model == "linear":
         if c0 < 0.:
@@ -70,10 +69,9 @@ def _DirectionGenerator(elevation, topo_handle):
                 c = (a + b * random.random())**0.5
                 if c > 0.:
                     break
-            elevation = -math.asin(c) / deg
-            azimuth = random.uniform(-180, 180.)
-            direction = topo_handle.horizontal_to_local(
-                position, azimuth, elevation)
+            theta = math.acos(c) / deg
+            phi = random.uniform(-180, 180.)
+            direction = topo_handle.angular_to_local(position, theta, phi)
             return direction, weight / c
     else:
         raise ValueError("invalid generation model for the direction")
@@ -189,7 +187,7 @@ class Generator(object):
             pdf.append(weight / total)
             models.append(GenerationModel(
                 _PositionGenerator(opts["position"], topo_handle),
-                _DirectionGenerator(opts["elevation"], topo_handle),
+                _DirectionGenerator(opts["theta"], topo_handle),
                 _EnergyGenerator(opts["energy"])))
         self._models = models
         self._current = models[0]

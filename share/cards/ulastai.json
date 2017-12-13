@@ -5,13 +5,13 @@
 
         "generator" :
                 [[ 1.0, {
-                        "elevation" : ["uniform", [-10.0, 10.0]],
+                        "theta" : ["uniform", [80.0, 100.0]],
                         "energy" : [1E+06, 1E+12],
                         "position" : [[-5E+04, 5E+04],
                                       [-5E+04, 5E+04],
                                       [0, 1E+03] ]}],
                 [ 2.0, {
-                        "elevation" : ["linear", [0.0, 10.0]] }]],
+                        "theta" : ["linear", [80.0, 90.0]] }]],
 
         "processor" : {
                 "requested" : 100,
