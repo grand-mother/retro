@@ -71,12 +71,17 @@ def PrimarySampler(primary, generator, topography, topo_handle):
     emax *= 1E+03
 
     # Configure for running DANTON.
+    max_events = primary["events"]
+    try:
+        requested = primary["requested"]
+    except KeyError:
+        requested = -1
     with ManageTemp():
         infile, outfile = get_tempfile(), get_tempfile()
         particle = {"tau": None, "tau~": None}
         sampler = {
             "altitude": None,
-            "theta": None,
+            "elevation": None,
             "energy": None,
             "weight": particle}
         flux_model = ["power-law", {
@@ -84,7 +89,8 @@ def PrimarySampler(primary, generator, topography, topo_handle):
             "exponent": -2.,
             "weight": 1.}]
         card = {
-            "events": primary["events"],
+            "events": max_events,
+            "requested": requested,
             "output-file": outfile,
             "mode": "backward",
             "longitudinal": primary["longitudinal"],
@@ -107,7 +113,7 @@ def PrimarySampler(primary, generator, topography, topo_handle):
             # Configure the sampler.
             sampler["altitude"] = topo_handle.local_to_lla(position)[2]
             theta, _ = topo_handle.local_to_angular(position, direction)
-            sampler["theta"] = theta
+            sampler["elevation"] = 90. - theta
             sampler["energy"] = energy
             if pid > 0.:
                 particle["tau"], particle["tau~"] = 1., 0.
@@ -127,10 +133,14 @@ def PrimarySampler(primary, generator, topography, topo_handle):
 
             # Parse the result.
             if not os.path.exists(outfile):
-                return []
+                return [], 0
+            n_events = 0
             primaries = []
             for event in danton.iter_event(outfile):
+                n_events = event.id
                 primaries.append([event.weight, event.primary.energy])
             os.remove(outfile)
-            return primaries
+            if len(primaries) < requested:
+                n_events = max_events
+            return primaries, n_events
     return sample

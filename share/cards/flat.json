@@ -8,7 +8,7 @@
                         [-5E+04, 5E+04], [-5E+04, 5E+04], [0, 1E+03] ]},
 
         "processor" : {
-                "requested" : 3,
+                "requested" : 100,
                 "trials" : null },
 
         "logger" : {
@@ -20,7 +20,8 @@
                 "path" : "flat/2" },
 
         "primary" : {
-                "events" : 100,
+                "events" : 1000,
+                "requested" : 10,
                 "longitudinal" : false },
 
         "antenna" : {

@@ -140,11 +140,12 @@ def run(generator, processor, logger, topography, primary=None, antenna=None,
 
         # Sample the primary flux.
         if primary and (primary["events"] > 0):
-            primaries = sample_primaries(pid, position, energy, direction)
-            if len(primaries) == 0:
+            primaries = sample_primaries(
+                pid, position, energy, direction)
+            if len(primaries[0]) == 0:
                 continue
         else:
-            primaries = []
+            primaries = ([], 0)
 
         # Build the tag.
         theta, phi = topo.local_to_angular(position, direction)
@@ -157,13 +158,9 @@ def run(generator, processor, logger, topography, primary=None, antenna=None,
         tag = "_".join(tag)
 
         # Log the event.
-        if primary:
-            primary_events = primary["events"]
-        else:
-            primary_events = 0
         log_event(tag=tag, tau_at_decay=(energy, position, direction),
-                  decay=decay, primaries=(primaries, primary_events),
-                  statistics=(weight, trials), antennas=selection)
+                  decay=decay, primaries=primaries, statistics=(weight, trials),
+                  antennas=selection)
         trials = 0
         done += 1
 
