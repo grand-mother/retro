@@ -90,7 +90,17 @@ def run(generator, processor, logger, topography, primary=None, antenna=None,
             threshold = e0
 
     # Main loop over events.
-    requested, max_trials = processor["requested"], processor["trials"]
+    try:
+        max_trials = processor["trials"]
+    except KeyError:
+        max_trials = None
+    try:
+        requested = processor["requested"]
+    except KeyError:
+        if max_trials is None:
+            raise ValueError(
+                "a requested or maximum number of events must be specified")
+        requested = max_trials
     trials, total_trials, done = 0, 0, 0
     pid = 15
     while True:
