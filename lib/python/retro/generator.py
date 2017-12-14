@@ -156,8 +156,7 @@ def _DecayGenerator():
         polarisation = (3 * c_double)(*direction)
         state = (3 * c_uint)()
         _alouette.alouette_random_state(state)
-        tag = binascii.hexlify(struct.pack("!IIId", state[2], state[1],
-                                           state[0], energy)).lstrip("0")
+        state = (state[2] * 1000000000 + state[1]) * 1000000000 + state[0]
 
         rc = _alouette.alouette_decay(pid, momentum, polarisation)
         if rc != 0:
@@ -169,7 +168,7 @@ def _DecayGenerator():
             if rc != 0:
                 break
             products.append([pid.value, [x for x in momentum]])
-        return tag, products
+        return products, state
     return generate
 
 

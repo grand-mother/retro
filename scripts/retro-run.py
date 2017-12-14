@@ -119,7 +119,7 @@ def run(generator, processor, logger, topography, primary=None, antenna=None,
 
         # Generate a valid tau decay, i.e. with enough energy for the shower.
         while True:
-            tag, decay = generate.decay(pid, energy, direction)
+            decay, state = generate.decay(pid, energy, direction)
             shower_energy = 0.
             for (pid_, momentum) in decay:
                 aid = abs(pid_)
@@ -145,6 +145,16 @@ def run(generator, processor, logger, topography, primary=None, antenna=None,
                 continue
         else:
             primaries = []
+
+        # Build the tag.
+        theta, phi = topo.local_to_angular(position, direction)
+        if phi < 0.:
+            phi += 360.
+        tag = ("E.{:.0e}".format(energy * 1E+09).replace("+", ""),
+               "X.{:.0f}".format(position[0]), "Y.{:.0f}".format(position[1]),
+               "Z.{:.0f}".format(position[2]), "T.{:.0f}".format(theta),
+               "P.{:.0f}".format(phi), "D.{:}".format(state))
+        tag = "_".join(tag)
 
         # Log the event.
         if primary:
