@@ -25,6 +25,8 @@ import math
 import random
 import struct
 import types
+# Custom imports
+from . import TAU_MASS
 
 
 def _PositionGenerator(position, topo_handle):
@@ -150,8 +152,7 @@ def _DecayGenerator():
         _alouette = lib
 
     def generate(self, pid, energy, direction):
-        m = 1.77682
-        p = math.sqrt((energy - m) * (energy + m))
+        p = math.sqrt((energy - TAU_MASS) * (energy + TAU_MASS))
         momentum = (3 * c_double)(*[x * p for x in direction])
         polarisation = (3 * c_double)(*direction)
         state = (3 * c_uint)()

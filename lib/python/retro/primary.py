@@ -19,11 +19,13 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import json
+import math
 import os
 import subprocess
 import tempfile
 # Custom imports.
 import danton
+from . import TAU_MASS, TAU_CTAU
 
 
 class DantonError(Exception):
@@ -131,6 +133,10 @@ def PrimarySampler(primary, generator, topography, topo_handle):
             if stderr:
                 raise DantonError(stderr)
 
+            # Compute the decay weight.
+            p = math.sqrt((energy - TAU_MASS) * (energy + TAU_MASS))
+            wd = TAU_MASS / (p * TAU_CTAU)
+
             # Parse the result.
             if not os.path.exists(outfile):
                 return [], 0
@@ -138,7 +144,7 @@ def PrimarySampler(primary, generator, topography, topo_handle):
             primaries = []
             for event in danton.iter_event(outfile):
                 n_events = event.id
-                primaries.append([event.weight, event.primary.energy])
+                primaries.append([event.weight * wd, event.primary.energy])
             os.remove(outfile)
             if len(primaries) < requested:
                 n_events = max_events

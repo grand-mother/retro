@@ -18,4 +18,8 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-__all__ = ("event", "generator", "primary")
+__all__ = ("event", "generator", "preselector", "primary")
+
+# Some common Physical properties
+TAU_MASS = 1.77682
+TAU_CTAU = 8.718E-05
