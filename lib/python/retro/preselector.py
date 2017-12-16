@@ -22,7 +22,7 @@ import json
 import numpy
 
 
-def Preselector(topography, antenna):
+def Preselector(topography, antenna, check_xmax=True, shadowing=True):
     """Closure for preselecting antennas at sight of the shower
     """
     # Load the antenna positions
@@ -39,11 +39,12 @@ def Preselector(topography, antenna):
         zcmax = 165E+03 * shower_energy / 1E+09 + 55E+03  # m
 
         # Check if the shower crashes into a mountain early, before xmax
-        s = numpy.arange(0., zcmin + deltar, deltar)
-        xs, ys, zs = [position[i] + direction[i] * s for i in xrange(3)]
-        zg = [topography.ground_altitude(xi, yi) for xi, yi in zip(xs, ys)]
-        if (zs <= zg).any():
-            return []
+        if check_xmax:
+            s = numpy.arange(0., zcmin + deltar, deltar)
+            xs, ys, zs = [position[i] + direction[i] * s for i in xrange(3)]
+            zg = [topography.ground_altitude(xi, yi) for xi, yi in zip(xs, ys)]
+            if (zs <= zg).any():
+                return []
 
         # Select the antenna(s) within the cone
         dr = ra - position
@@ -55,6 +56,9 @@ def Preselector(topography, antenna):
         index = numpy.nonzero(test_radius & test_edgemin & test_edgemax)[0]
         if len(index) == 0:
             return index
+
+        if not shadowing:
+            return ra[index, :].tolist()
 
         # Check for shadowing
         r0 = position + zcmin * numpy.array(direction)

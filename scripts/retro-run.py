@@ -32,7 +32,7 @@ from grand_tour import Topography
 
 
 def run(generator, processor, logger, topography, primary=None, antenna=None,
-        comment=None):
+        preselector=None, comment=None):
     """Generate some tau decay vertices according to the provided settings.
     """
 
@@ -62,7 +62,9 @@ def run(generator, processor, logger, topography, primary=None, antenna=None,
     # Initialise the preselector
     if antenna is not None:
         from retro.preselector import Preselector
-        preselector = Preselector(topo, antenna)
+        if preselector is None:
+            preselector = {}
+        preselect = Preselector(topo, antenna, **preselector)
 
     def filter_vertex(energy, position, direction):
         """Vertex filter based on the tau decay length.
@@ -142,7 +144,7 @@ def run(generator, processor, logger, topography, primary=None, antenna=None,
 
         # Preselect antennas that might detect the radio signal from the shower
         if antenna is not None:
-            selection = preselector(shower_energy, position, direction)
+            selection = preselect(shower_energy, position, direction)
             if len(selection) < 4:
                 continue
         else:
