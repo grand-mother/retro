@@ -25,10 +25,11 @@ import math
 import sys
 import random
 # Custom import(s)
+from grand_tour import Topography
+from retro import TAU_CTAU, TAU_MASS
 from retro.event import EventLogger
 from retro.generator import Generator
 from retro.primary import PrimarySampler
-from grand_tour import Topography
 
 
 def run(generator, processor, logger, topography, primary=None, antenna=None,
@@ -71,7 +72,7 @@ def run(generator, processor, logger, topography, primary=None, antenna=None,
            TODO: check the grammage before as well.
         """
         # First let us compute the decay length, assuming no energy loss.
-        dl = energy * 4.89639E-05
+        dl = energy * TAU_CTAU / TAU_MASS
 
         # Then let us compute the distance to the topography, propagating
         # backwards.
@@ -87,7 +88,9 @@ def run(generator, processor, logger, topography, primary=None, antenna=None,
     # Infer the energy threshold for showers from the generation model.
     threshold = float("inf")
     for _, opts in generator:
-        e0 = opts["energy"][0]
+        e0, e1 = opts["energy"]
+        if isinstance(e0, basestring):
+            e0, _ = e1
         if e0 < threshold:
             threshold = e0
 

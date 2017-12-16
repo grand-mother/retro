@@ -25,7 +25,7 @@ import subprocess
 import tempfile
 # Custom imports.
 import danton
-from . import TAU_MASS, TAU_CTAU
+from . import TAU_CTAU, TAU_MASS
 
 
 class DantonError(Exception):
@@ -66,11 +66,14 @@ def PrimarySampler(primary, generator, topography, topo_handle):
     emin, emax = float("inf"), 0.
     for _, opts in generator:
         e0, e1 = opts["energy"]
+        if isinstance(e0, basestring):
+            e0, e1 = e1
         if e0 < emin:
             emin = e0
         if e1 > emax:
             emax = e1
     emax *= 1E+03
+    weight_factor = TAU_MASS / TAU_CTAU * (1. / emin - 1. / emax)
 
     # Configure for running DANTON.
     max_events = primary["events"]
@@ -135,7 +138,7 @@ def PrimarySampler(primary, generator, topography, topo_handle):
 
             # Compute the decay weight.
             p = math.sqrt((energy - TAU_MASS) * (energy + TAU_MASS))
-            wd = TAU_MASS / (p * TAU_CTAU)
+            wd = weight_factor / p
 
             # Parse the result.
             if not os.path.exists(outfile):

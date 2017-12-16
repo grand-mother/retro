@@ -83,12 +83,28 @@ def _DirectionGenerator(theta, topo_handle):
 def _EnergyGenerator(energy):
     """Closure for generating a tentative tau energy before decay.
     """
-    e0 = energy[0]
-    lnr = math.log(energy[1] / e0)
+    if isinstance(energy[0], basestring):
+        model, range_ = energy
+    else:
+        model, range_ = "1 / E", energy
 
-    def generate():
-        e = e0 * math.exp(random.uniform(0., lnr))
-        return e, e * lnr
+    if model == "1 / E":
+        e0 = range_[0]
+        lnr = math.log(range_[1] / e0)
+
+        def generate():
+            e = e0 * math.exp(random.uniform(0., lnr))
+            return e, e * lnr
+    elif model == "1 / E**2":
+        e0 = range_[0]
+        r = 1. - e0 / range_[1]
+
+        def generate():
+            e = e0 / (1. - r * random.uniform(0., 1.))
+            return e, r * e**2 / e0
+    else:
+        raise ValueError("invalid generation model for the energy")
+
     return generate
 
 
