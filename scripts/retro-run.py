@@ -106,7 +106,7 @@ def run(generator, processor, logger, topography, primary=None, antenna=None,
             raise ValueError(
                 "a requested or maximum number of events must be specified")
         requested = max_trials
-    trials, total_trials, done = 0, 0, 0
+    trials, neff, total_trials, done = 0, 0., 0, 0
     pid = 15
     while True:
         # Check the termination conditions.
@@ -128,7 +128,8 @@ def run(generator, processor, logger, topography, primary=None, antenna=None,
         # Check if the generated direction is relevant considering the
         # generated position and its energy.
         w4 = filter_vertex(energy, position, direction)
-        if (w4 <= 0.) or (random.random() > w4):
+        neff += w4
+        if (w4 == 0.) or (random.random() > w4):
             continue
         weight = w0 * w1 * w2 * w3 / w4
 
@@ -144,6 +145,7 @@ def run(generator, processor, logger, topography, primary=None, antenna=None,
             if shower_energy >= threshold:
                 break
             trials += 1
+            neff += w4
 
         # Preselect antennas that might detect the radio signal from the shower
         if antenna is not None:
@@ -174,9 +176,9 @@ def run(generator, processor, logger, topography, primary=None, antenna=None,
 
         # Log the event.
         log_event(tag=tag, tau_at_decay=(energy, position, direction),
-                  decay=decay, primaries=primaries, statistics=(weight, trials),
-                  antennas=selection)
-        trials = 0
+                  decay=decay, primaries=primaries,
+                  statistics=(weight, trials, neff), antennas=selection)
+        trials, neff = 0, 0.
         done += 1
 
 
