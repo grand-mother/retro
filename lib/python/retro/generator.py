@@ -88,7 +88,14 @@ def _EnergyGenerator(energy):
     else:
         model, range_ = "1 / E", energy
 
-    if model == "1 / E":
+    if model == "uniform":
+        e0, e1 = range_
+        w = e1 - e0
+
+        def generate():
+            e = random.uniform(e0, e1)
+            return e, e1 - e0
+    elif model == "1 / E":
         e0 = range_[0]
         lnr = math.log(range_[1] / e0)
 

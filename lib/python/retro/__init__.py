@@ -21,5 +21,6 @@
 __all__ = ("event", "generator", "preselector", "primary")
 
 # Some common Physical properties
-TAU_MASS = 1.77682
+TAU_BR_MU = 0.1736
 TAU_CTAU = 8.718E-05
+TAU_MASS = 1.77682
