@@ -118,7 +118,7 @@ def PrimarySampler(primary, generator, topography, topo_handle):
             # Configure the sampler.
             sampler["altitude"] = topo_handle.local_to_lla(position)[2]
             theta, _ = topo_handle.local_to_angular(position, direction)
-            sampler["elevation"] = 90. - theta
+            sampler["elevation"] = theta - 90.
             sampler["energy"] = energy
             if pid > 0.:
                 particle["tau"], particle["tau~"] = 1., 0.
