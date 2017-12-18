@@ -26,14 +26,15 @@ import sys
 import random
 # Custom import(s)
 from grand_tour import Topography
-from retro import TAU_BR_MU, TAU_CTAU, TAU_MASS
+from retro import TAU_BR_MU
 from retro.event import EventLogger
 from retro.generator import Generator
 from retro.primary import PrimarySampler
+from retro.selector import Selector
 
 
 def run(generator, processor, logger, topography, primary=None, antenna=None,
-        preselector=None, comment=None):
+        selector=None, comment=None):
     """Generate some tau decay vertices according to the provided settings.
     """
 
@@ -60,30 +61,8 @@ def run(generator, processor, logger, topography, primary=None, antenna=None,
     else:
         def sample_primaries(pid, position, energy, direction): return []
 
-    # Initialise the preselector
-    if antenna is not None:
-        from retro.preselector import Preselector
-        if preselector is None:
-            preselector = {}
-        preselect = Preselector(topo, antenna, **preselector)
-
-    def filter_vertex(energy, position, direction):
-        """Vertex filter based on the tau decay length.
-           TODO: check the grammage before as well.
-        """
-        # First let us compute the decay length, assuming no energy loss.
-        dl = energy * TAU_CTAU / TAU_MASS
-
-        # Then let us compute the distance to the topography, propagating
-        # backwards.
-        dg = topo.distance(
-            position, [-c for c in direction], limit=2. * dl)
-        if dg is None:
-            return math.exp(-2.)
-
-        # As selection weight, let us consider the probability that no decay
-        # occured on the path to rocks.
-        return math.exp(-dg / dl)
+    # Initialise the selector
+    select = Selector(selector, topo, antenna)
 
     # Infer the energy threshold for showers from the generation model.
     threshold = float("inf")
@@ -127,7 +106,7 @@ def run(generator, processor, logger, topography, primary=None, antenna=None,
 
         # Check if the generated direction is relevant considering the
         # generated position and its energy.
-        w4 = filter_vertex(energy, position, direction)
+        w4 = select.vertex_weight(energy, position, direction)
         if (w4 == 0.) or (random.random() > w4):
             continue
         weight = w0 * w1 * w2 * w3 / w4
@@ -146,12 +125,9 @@ def run(generator, processor, logger, topography, primary=None, antenna=None,
         weight *= 1. - TAU_BR_MU
 
         # Preselect antennas that might detect the radio signal from the shower
-        if antenna is not None:
-            selection = preselect(shower_energy, position, direction)
-            if len(selection) < 4:
-                continue
-        else:
-            selection = None
+        selection = select.antennas(shower_energy, position, direction)
+        if (selection is not None) and len(selection) < 4:
+            continue
 
         # Sample the primary flux.
         if primary and (primary["events"] > 0):

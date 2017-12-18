@@ -2,7 +2,7 @@
         "comment" : "This is an example card with a flat topography.",
 
         "generator" : {
-                "theta" : [90.0, 100.0],
+                "theta" : [80.0, 100.0],
                 "energy" : [1E+06, 1E+12],
                 "position" : [
                         [-5E+04, 5E+04], [-5E+04, 5E+04], [0, 1E+03] ]},
@@ -10,6 +10,9 @@
         "processor" : {
                 "requested" : 100,
                 "trials" : null },
+
+        "selector" : {
+                "vertex" : { "limit" : 2.0 }},
 
         "logger" : {
                 "path" : "events-flat.json" },

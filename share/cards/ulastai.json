@@ -17,6 +17,9 @@
                 "requested" : 100,
                 "trials" : null },
 
+        "selector" : {
+                "vertex" : { "limit" : 3.0 }},
+
         "logger" : {
                 "path" : "events-ulastai.json" },
 

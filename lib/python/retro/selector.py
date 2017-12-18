@@ -19,12 +19,18 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 import json
-import numpy
+import math
+import types
+
+from retro import TAU_CTAU, TAU_MASS
 
 
-def Preselector(topography, antenna, check_xmax=True, shadowing=True):
-    """Closure for preselecting antennas at sight of the shower
+def _AntennaSelector(topography, antenna, check_xmax=True, shadowing=True):
+    """Closure for selecting antennas at sight of the shower
     """
+    # Import numpy only if the antenna selector is required
+    import numpy
+
     # Load the antenna positions
     with open(antenna["position"], "rb") as f:
         ra = numpy.array(json.load(f))
@@ -32,7 +38,7 @@ def Preselector(topography, antenna, check_xmax=True, shadowing=True):
     # Discretization accuracy for rays, in m
     deltar = 200.
 
-    def preselect(shower_energy, position, direction):
+    def select(self, shower_energy, position, direction):
         # Cone parameters
         gamma = numpy.deg2rad(3.)
         zcmin = 14E+03  # m
@@ -77,4 +83,60 @@ def Preselector(topography, antenna, check_xmax=True, shadowing=True):
         K = filter(check_shadowing, index)
         return ra[K, :].tolist()
 
-    return preselect
+    return select
+
+
+def _VertexSelector(topography, limit):
+    """Closure for selecting decay vertices
+    """
+
+    def select(self, energy, position, direction):
+        """Vertex filter based on the tau decay length.
+        """
+        # First let us compute the decay length, assuming no energy loss.
+        dl = energy * TAU_CTAU / TAU_MASS
+
+        # Then let us compute the distance to the topography, propagating
+        # backwards.
+        dg = topography.distance(
+            position, [-c for c in direction], limit=limit * dl)
+        if dg is None:
+            return math.exp(-limit)
+
+        # As selection weight, let us consider the probability that no decay
+        # occured on the path to rocks.
+        return math.exp(-dg / dl)
+
+    return select
+
+
+class Selector(object):
+    """Selector for tau events."""
+
+    def __init__(self, selector, topo_handle, antenna):
+        # Overwrite the selection methods, if relevant
+        if (selector is None) or not selector:
+            return
+
+        if ((antenna is not None) and
+                ((antenna not in selector.keys()) or selector["antenna"])):
+            if ((antenna not in selector.keys()) or
+                    not isinstance(selector["antenna"], dict)):
+                opts = {}
+            else:
+                opts = selector["antenna"]
+            self.antennas = types.MethodType(
+                _AntennaSelector(topo_handle, antenna, **opts), self)
+        if "vertex" in selector.keys():
+            self.vertex_weight = types.MethodType(
+                _VertexSelector(topo_handle, selector["vertex"]["limit"]), self)
+
+    def antennas(self, shower_energy, position, direction):
+        """Select antennas at sight of the decay
+        """
+        return None
+
+    def vertex_weight(self, energy, position, direction):
+        """Compute the vertex selection weight
+        """
+        return 1.
