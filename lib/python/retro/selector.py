@@ -127,7 +127,7 @@ class Selector(object):
                 opts = selector["antenna"]
             self.antennas = types.MethodType(
                 _AntennaSelector(topo_handle, antenna, **opts), self)
-        if "vertex" in selector.keys():
+        if ("vertex" in selector.keys()) and (selector["vertex"]["limit"] > 0.):
             self.vertex_weight = types.MethodType(
                 _VertexSelector(topo_handle, selector["vertex"]["limit"]), self)
 
