@@ -149,7 +149,8 @@ def run(generator, processor, logger, topography, primary=None, antenna=None,
         tag = "_".join(tag)
 
         # Log the event.
-        log_event(tag=tag, tau_at_decay=(energy, position, direction),
+        altitude = topo.local_to_lla(position)[2]
+        log_event(tag=tag, tau_at_decay=(energy, position, direction, altitude),
                   decay=decay, primaries=primaries, statistics=(weight, trials),
                   antennas=selection)
         trials = 0
