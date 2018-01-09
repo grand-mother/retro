@@ -50,7 +50,12 @@ def _DirectionGenerator(theta, topo_handle):
         model, range_ = theta
     else:
         model, range_ = "uniform", theta
-    c1, c0 = (math.cos(x * deg) for x in range_)
+    def angle2cos(a):
+        c = math.cos(a * deg)
+        if abs(c) < 1E-12:
+            return 0.
+        return c
+    c1, c0 = (angle2cos(x) for x in range_)
     if model == "uniform":
         weight = (c1 - c0) * 2. * math.pi
 
@@ -61,8 +66,12 @@ def _DirectionGenerator(theta, topo_handle):
             direction = topo_handle.angular_to_local(position, theta, phi)
             return direction, weight
     elif model == "linear":
-        if c0 < 0.:
+        if c1 * c0 < 0.:
             raise ValueError("invalid range for linear pdf")
+        if c1 < 0.:
+            sgn = -1.
+        else:
+            sgn = 1.
         a, b = c0**2, (c1**2 - c0**2)
         weight = b * math.pi
 
@@ -71,8 +80,8 @@ def _DirectionGenerator(theta, topo_handle):
                 c = (a + b * random.random())**0.5
                 if c > 0.:
                     break
-            theta = math.acos(c) / deg
-            phi = random.uniform(-180, 180.)
+            theta = math.acos(sgn * c) / deg
+            phi = random.uniform(-180., 180.)
             direction = topo_handle.angular_to_local(position, theta, phi)
             return direction, weight / c
     else:

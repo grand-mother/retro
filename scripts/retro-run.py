@@ -143,9 +143,9 @@ def run(generator, processor, logger, topography, primary=None, antenna=None,
         if phi < 0.:
             phi += 360.
         tag = ("E.{:.0e}".format(energy * 1E+09).replace("+", ""),
+               "T.{:.0f}".format(theta), "P.{:.0f}".format(phi),
                "X.{:.0f}".format(position[0]), "Y.{:.0f}".format(position[1]),
-               "Z.{:.0f}".format(position[2]), "T.{:.0f}".format(theta),
-               "P.{:.0f}".format(phi), "D.{:}".format(state))
+               "Z.{:.0f}".format(position[2]), "D.{:}".format(state))
         tag = "_".join(tag)
 
         # Log the event.
