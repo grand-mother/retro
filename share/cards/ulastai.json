@@ -14,7 +14,7 @@
                         "theta" : ["linear", [90.0, 100.0]] }]],
 
         "processor" : {
-                "requested" : 100,
+                "requested" : 10,
                 "trials" : null },
 
         "selector" : {
@@ -22,6 +22,11 @@
 
         "logger" : {
                 "path" : "events-ulastai.json" },
+
+        "primary" : {
+                "events" : 1000,
+                "requested" : 10,
+                "longitudinal" : false },
 
         "topography" : {
                 "latitude" : 42.928056,

@@ -85,7 +85,10 @@ def PrimarySampler(primary, generator, topography, topo_handle):
         infile, outfile = get_tempfile(), get_tempfile()
         particle = {"tau": None, "tau~": None}
         sampler = {
+            "latitude": None,
+            "longitude": None,
             "altitude": None,
+            "azimuth": None,
             "elevation": None,
             "energy": None,
             "weight": particle}
@@ -103,12 +106,14 @@ def PrimarySampler(primary, generator, topography, topo_handle):
             "particle-sampler": sampler,
             "primary-flux": {
                 "nu_tau": flux_model,
-                "nu_tau~": flux_model}}
+                "nu_tau~": flux_model},
+            "earth-model": {
+                "geodesic": "WGS84",
+                "sea": False}}
         flat = topography["path"].startswith("flat")
-        if flat:
-            card["earth-model"] = {"sea": False}
-        else:
-            raise ValueError("non flat topography is not yet supported")
+        if not flat:
+            card["earth-model"]["topography"] = (topography["path"],
+                                                 topography["stack_size"])
         run_cmd = "danton {:}".format(infile)
 
     def sample(pid, position, energy, direction):
@@ -116,8 +121,10 @@ def PrimarySampler(primary, generator, topography, topo_handle):
         """
         with ManageTemp():
             # Configure the sampler.
-            sampler["altitude"] = topo_handle.local_to_lla(position)[2]
-            theta, _ = topo_handle.local_to_angular(position, direction)
+            lla = topo_handle.local_to_lla(position)
+            sampler["latitude"], sampler["longitude"], sampler["altitude"] = lla
+            theta, phi = topo_handle.local_to_angular(position, direction)
+            sampler["azimuth"] = -phi
             sampler["elevation"] = 90. - theta
             sampler["energy"] = energy
             if pid > 0.:

@@ -1,6 +1,6 @@
 export DEPS_DIR := $(PWD)/deps
 export LIB_DIR := $(PWD)/lib
-export PDF_DIR := $(abspath deps/ent/data/pdf)
+export PDF_DIR := $(abspath deps/ent/share/pdf)
 export TURTLE_USE_PNG := 0
 unexport CFLAGS
 
@@ -16,8 +16,8 @@ clean:
 	@rm -rf bin lib/*.so lib/*.a lib/python/*.so
 	@find lib/python -type l -delete
 
-DANTON_LIBS := lib/libalouette.so lib/libdanton.so lib/libent.so lib/libjsmn.a \
-	lib/libpumas.so lib/libturtle.so
+DANTON_LIBS := lib/libalouette.so lib/libdanton.so lib/libent.so               \
+	lib/libjsmn-tea.a lib/libpumas.so lib/libturtle.so
 lib: $(DANTON_LIBS)
 
 bin/danton: deps/danton/src deps/danton/include $(DANTON_LIBS)
@@ -44,9 +44,8 @@ lib/lib%.so: deps/%/src deps/%/include
 lib/libdanton.so: deps/danton/src deps/danton/include
 	@$(call build_library,danton,lib/libdanton.so,lib,so)
 
-lib/libjsmn.a: deps/jsmn/jsmn.h
-	@$(call build_library,jsmn,libjsmn.a,.,a)
-	@$(MAKE) --directory="$(DEPS_DIR)/jsmn" clean
+lib/libjsmn-tea.a: deps/jsmn-tea/src deps/jsmn-tea/include
+	@$(call build_library,jsmn-tea,static,lib,a)
 
 python: lib/python/grand_tour.so lib/python/danton.py
 
