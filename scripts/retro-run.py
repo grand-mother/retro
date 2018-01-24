@@ -131,28 +131,34 @@ def run(generator, processor, logger, topography, primary=None, setup=None,
 
         # Sample the primary flux.
         if primary and (primary["events"] > 0):
-            primaries = sample_primaries(
+            primaries, primary_trials = sample_primaries(
                 pid, position, energy, direction)
-            if len(primaries[0]) == 0:
+            if len(primaries) == 0:
                 continue
+            for i, (wi, ei, _, _) in enumerate(primaries):
+                primaries[i][0] = weight * wi * ei**2
         else:
-            primaries = ([], 0)
+            primaries, primary_trials = [], 0
 
         # Build the tag.
-        theta, phi = topo.local_to_angular(position, direction)
+        lla = topo.local_to_lla(position)
+        latitude, longitude, altitude = lla
+        hz = topo.local_to_angular(position, direction)
+        theta, phi = hz
         if phi < 0.:
             phi += 360.
         tag = ("E.{:.0e}".format(energy * 1E+09).replace("+", ""),
-               "T.{:.0f}".format(theta), "P.{:.0f}".format(phi),
-               "X.{:.0f}".format(position[0]), "Y.{:.0f}".format(position[1]),
-               "Z.{:.0f}".format(position[2]), "D.{:}".format(state))
+               "Z.{:.0f}".format(theta), "A.{:.0f}".format(phi),
+               "La.{:.0f}".format(latitude), "Lo.{:.0f}".format(longitude),
+               "H.{:.0f}".format(altitude), "D.{:}".format(state))
         tag = "_".join(tag)
 
         # Log the event.
-        altitude = topo.local_to_lla(position)[2]
-        log_event(tag=tag, tau_at_decay=(energy, position, direction, altitude),
-                  decay=decay, primaries=primaries, statistics=(weight, trials),
-                  antennas=selection)
+        tau_at_decay = (weight, energy, position, direction, lla, hz)
+        log_event(tag=tag, tau_at_decay=tau_at_decay, decay=decay,
+                  primaries=primaries, statistics=(trials, primary_trials),
+                  antennas=selection, origin=(topography["latitude"],
+                                              topography["longitude"]))
         trials = 0
         done += 1
 
