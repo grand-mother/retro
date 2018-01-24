@@ -73,7 +73,7 @@ def _DirectionGenerator(theta, topo_handle):
         else:
             sgn = 1.
         a, b = c0**2, (c1**2 - c0**2)
-        weight = b * math.pi
+        weight = abs(b) * math.pi
 
         def generate(position):
             while True:

@@ -27,6 +27,6 @@
                 "requested" : 10,
                 "longitudinal" : false },
 
-        "antenna" : {
-                "position": "share/setup/flat-positions-30x30.json" }
+        "setup" : {
+                "path": "share/setup/flat-30x30.json" }
 }

@@ -25,14 +25,14 @@ import types
 from retro import TAU_CTAU, TAU_MASS
 
 
-def _AntennaSelector(topography, antenna, check_xmax=True, shadowing=True):
+def _AntennaSelector(topography, setup, check_xmax=True, shadowing=True):
     """Closure for selecting antennas at sight of the shower
     """
     # Import numpy only if the antenna selector is required
     import numpy
 
     # Load the antenna positions
-    with open(antenna["position"], "rb") as f:
+    with open(setup["path"], "rb") as f:
         ra = numpy.array(json.load(f))
 
     # Discretization accuracy for rays, in m
@@ -53,7 +53,7 @@ def _AntennaSelector(topography, antenna, check_xmax=True, shadowing=True):
                 return []
 
         # Select the antenna(s) within the cone
-        dr = ra - position
+        dr = ra[:, :3] - position
         zp = numpy.dot(dr, direction)
         rp2 = numpy.sum(dr**2, axis=1) - zp**2
         test_radius = rp2 <= ((zp - zcmin) * numpy.tan(gamma))**2
@@ -70,7 +70,7 @@ def _AntennaSelector(topography, antenna, check_xmax=True, shadowing=True):
         r0 = position + zcmin * numpy.array(direction)
 
         def check_shadowing(i):
-            u = ra[i, :] - r0
+            u = ra[i, :3] - r0
             d = numpy.linalg.norm(u)
             u /= d
             s = numpy.arange(0., d, deltar)
@@ -113,20 +113,20 @@ def _VertexSelector(topography, limit):
 class Selector(object):
     """Selector for tau events."""
 
-    def __init__(self, selector, topo_handle, antenna):
+    def __init__(self, selector, topo_handle, setup):
         # Overwrite the selection methods, if relevant
         if (selector is None) or not selector:
             return
 
-        if ((antenna is not None) and
-                ((antenna not in selector.keys()) or selector["antenna"])):
-            if ((antenna not in selector.keys()) or
-                    not isinstance(selector["antenna"], dict)):
+        if ((setup is not None) and
+                ((setup not in selector.keys()) or selector["setup"])):
+            if ((setup not in selector.keys()) or
+                    not isinstance(selector["setup"], dict)):
                 opts = {}
             else:
-                opts = selector["antenna"]
+                opts = selector["setup"]
             self.antennas = types.MethodType(
-                _AntennaSelector(topo_handle, antenna, **opts), self)
+                _AntennaSelector(topo_handle, setup, **opts), self)
         if ("vertex" in selector.keys()) and (selector["vertex"]["limit"] > 0.):
             self.vertex_weight = types.MethodType(
                 _VertexSelector(topo_handle, selector["vertex"]["limit"]), self)

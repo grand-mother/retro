@@ -26,7 +26,7 @@
         "primary" : {
                 "events" : 1000,
                 "requested" : 10,
-                "longitudinal" : false },
+                "longitudinal" : true },
 
         "topography" : {
                 "latitude" : 42.928056,
@@ -34,7 +34,7 @@
                 "path" : "share/topography",
                 "stack_size" : 25 },
 
-        "antenna" : {
-                "position": "share/setup/ulastai-positions-30x30.json"
+        "setup" : {
+                "path": "share/setup/ulastai-30x30.json"
         }
 }

@@ -33,7 +33,7 @@ from retro.primary import PrimarySampler
 from retro.selector import Selector
 
 
-def run(generator, processor, logger, topography, primary=None, antenna=None,
+def run(generator, processor, logger, topography, primary=None, setup=None,
         selector=None, comment=None):
     """Generate some tau decay vertices according to the provided settings.
     """
@@ -62,7 +62,7 @@ def run(generator, processor, logger, topography, primary=None, antenna=None,
         def sample_primaries(pid, position, energy, direction): return []
 
     # Initialise the selector
-    select = Selector(selector, topo, antenna)
+    select = Selector(selector, topo, setup)
 
     # Infer the energy threshold for showers from the generation model.
     threshold = float("inf")
