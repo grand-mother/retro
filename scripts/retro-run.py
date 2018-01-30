@@ -135,7 +135,7 @@ def run(generator, processor, logger, topography, primary=None, setup=None,
                 pid, position, energy, direction)
             if len(primaries) == 0:
                 continue
-            for i, (wi, ei, _, _) in enumerate(primaries):
+            for i, (wi, ei, _, _, _, _) in enumerate(primaries):
                 primaries[i][0] = weight * wi * ei**2
         else:
             primaries, primary_trials = [], 0

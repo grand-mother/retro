@@ -155,8 +155,12 @@ def PrimarySampler(primary, generator, topography, topo_handle):
             for event in danton.iter_event(outfile):
                 n_events = event.id
                 d = event.decay[0]
+                local = topo_handle.ecef_to_local(d.tau_i.position)
+                lla = topo_handle.local_to_lla(local)
+                zg = topo_handle.ground_altitude(lla[0], lla[1], geodetic=True)
+                medium = int(lla[2] > zg)
                 primaries.append([event.weight * wd, event.primary.energy,
-                                  d.generation, d.tau_i.position])
+                                  d.generation, medium, local, lla])
             os.remove(outfile)
             if len(primaries) < requested:
                 n_events = max_events
