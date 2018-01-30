@@ -26,6 +26,7 @@ import tempfile
 # Custom imports.
 import danton
 from . import TAU_CTAU, TAU_MASS
+from grand_tour import TurtleError
 
 
 class DantonError(Exception):
@@ -157,7 +158,11 @@ def PrimarySampler(primary, generator, topography, topo_handle):
                 d = event.decay[0]
                 local = topo_handle.ecef_to_local(d.tau_i.position)
                 lla = topo_handle.local_to_lla(local)
-                zg = topo_handle.ground_altitude(lla[0], lla[1], geodetic=True)
+                try:
+                    zg = topo_handle.ground_altitude(lla[0], lla[1],
+                                                     geodetic=True)
+                except TurtleError:
+                    zg = 0.
                 medium = int(lla[2] > zg)
                 primaries.append([event.weight * wd, event.primary.energy,
                                   d.generation, medium, local, lla])
