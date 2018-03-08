@@ -3,18 +3,14 @@
         "comment": "Ulastai, China, where the 21CMA and TREND experiments",
         "comment": "are located.",
 
-        "generator" :
-                [[ 1.0, {
+        "generator" : {
                         "theta" : ["uniform", [80.0, 100.0]],
                         "energy" : [1E+06, 1E+12],
                         "position" : [[-5E+04, 5E+04],
                                       [-5E+04, 5E+04],
-                                      [0, 1E+03] ]}],
-                [ 2.0, {
-                        "theta" : ["linear", [90.0, 100.0]] }]],
-
+                                      [0, 1E+03] ]},
         "processor" : {
-                "requested" : 10,
+                "requested" : 100,
                 "trials" : null },
 
         "selector" : {

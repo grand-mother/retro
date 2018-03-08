@@ -28,3 +28,6 @@
 [submodule "jsmn-tea"]
 	path = deps/jsmn-tea
 	url = https://github.com/niess/jsmn-tea.git
+[submodule "ninja"]
+	path = deps/ninja
+	url = https://github.com/ninja-build/ninja.git

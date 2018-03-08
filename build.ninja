@@ -1,0 +1,149 @@
+builddir = build
+cflags = -O2 -std=c99 -pedantic -Wall
+fflags = -O2 -fno-second-underscore -fno-backslash -fno-automatic $
+        -ffixed-line-length-132 -w
+
+rule cc
+        command = gcc $cflags $include -c $in -o $out
+        description = Compiling $out
+
+rule fc
+        command = gfortran $fflags -c $in -o $out
+        description = Compiling $out
+
+rule binary
+        command = gcc $cflags $include $in -o $out $lib
+        description = Generating binary $out
+
+rule shared
+        command = gcc $cflags -fPIC -shared $include $in -o $out $lib
+        description = Building shared library $out
+
+rule static
+        command = rm -f $out && ar rcs $out $in
+        description = Building static library $out
+
+rule mkdir
+        command = mkdir -p $out
+        description = Creating directory $out
+
+rule python-build
+        command = cd $in && $env python setup.py --quiet build $options
+        description = Building $out (python)
+
+rule remove
+        command = rm -rf $targets
+        description = Removing $targets
+
+build bin: mkdir
+build lib: mkdir
+
+# Build TURTLE as a shared library
+build turtle: phony lib/libturtle.so
+
+build lib/libturtle.so: shared deps/turtle/src/geotiff16.c $
+        deps/turtle/src/turtle.c deps/turtle/src/turtle_client.c $
+        deps/turtle/src/turtle_datum.c deps/turtle/src/turtle_map.c $
+        deps/turtle/src/turtle_projection.c | lib deps/tinydir/tinydir.h
+        cflags = $cflags -DTURTLE_NO_PNG
+        include = -Ideps/turtle/include -Ideps/tinydir
+        lib = -ltiff
+
+# Build ALOUETTE as a static library
+build alouette: phony $builddir/libalouette.a
+
+build $builddir/libalouette.a: static $builddir/tauola.o $builddir/formf.o $
+        $builddir/curr_cleo.o $builddir/pkorb.o $builddir/f3pi.o $
+        $builddir/tauola_extras.o $builddir/f3pi_rcht.o $builddir/funct_3pi.o $
+        $builddir/funct_rpt.o $builddir/value_parameter.o $builddir/FA1RCHL.o $
+        $builddir/ffwid3pi.o $builddir/initA1TabKKpi.o $builddir/wid_a1_fit.o $
+        $builddir/initA1Tab.o $builddir/wid_a1_fitKKpi.o $
+        $builddir/gaus_integr.o $builddir/gfact.o $builddir/frho_pi_belle.o $
+        $builddir/alouette.o
+
+build $builddir/alouette.o: cc deps/alouette/src/alouette.c
+        include = -Ideps/alouette/include
+
+tauola_dir = deps/alouette/src/tauola/
+rchlcur_dir = $tauola_dir/new-currents/RChL-currents
+othercur_dir = $tauola_dir/new-currents/other-currents
+
+build $builddir/tauola.o: fc $tauola_dir/tauola.f
+build $builddir/formf.o: fc $tauola_dir/formf.f
+build $builddir/curr_cleo.o: fc $tauola_dir/curr_cleo.f
+build $builddir/pkorb.o: fc $tauola_dir/pkorb.f
+build $builddir/f3pi.o: fc $tauola_dir/f3pi.f
+build $builddir/tauola_extras.o: fc $tauola_dir/tauola_extras.f
+build $builddir/f3pi_rcht.o: fc $rchlcur_dir/rcht_3pi/f3pi_rcht.f
+build $builddir/funct_3pi.o: fc $rchlcur_dir/rcht_3pi/funct_3pi.f
+build $builddir/funct_rpt.o: fc $rchlcur_dir/rcht_common/funct_rpt.f
+build $builddir/value_parameter.o: fc $rchlcur_dir/rcht_common/value_parameter.f
+build $builddir/FA1RCHL.o: fc $rchlcur_dir/rcht_common/FA1RCHL.f
+build $builddir/ffwid3pi.o: fc $rchlcur_dir/rcht_common/ffwid3pi.f
+build $builddir/initA1TabKKpi.o: fc $rchlcur_dir/rcht_common/initA1TabKKpi.f
+build $builddir/wid_a1_fit.o: fc $rchlcur_dir/rcht_common/wid_a1_fit.f
+build $builddir/initA1Tab.o: fc $rchlcur_dir/rcht_common/initA1Tab.f
+build $builddir/wid_a1_fitKKpi.o: fc $rchlcur_dir/rcht_common/wid_a1_fitKKpi.f
+build $builddir/gaus_integr.o: fc $rchlcur_dir/rcht_common/gaus_integr.f
+build $builddir/gfact.o: fc $rchlcur_dir/rcht_common/gfact.f
+build $builddir/frho_pi_belle.o: fc $othercur_dir/frho_pi_belle.f
+
+# Build JSMN-TEA as a static library
+build jsmn_tea: phony $builddir/libjsmn-tea.a
+
+build $builddir/libjsmn-tea.a: static $builddir/jsmn-tea.o $builddir/jsmn.o
+
+build $builddir/jsmn-tea.o: cc deps/jsmn-tea/src/jsmn-tea.c $
+        | deps/roar/include/roar.h
+        cflags = $cflags -DROAR_IMPLEMENTATION
+        include = -Ideps/jsmn -Ideps/jsmn-tea/include -Ideps/roar/include
+
+build $builddir/jsmn.o: cc deps/jsmn/jsmn.c $
+        | deps/roar/include/roar.h
+        include = -Ideps/jsmn
+
+# Build DANTON as a static library
+build danton: phony $builddir/libdanton.a
+
+build $builddir/libdanton.a: static $builddir/danton.o $
+        $builddir/danton-powerlaw.o $builddir/ent.o $builddir/pumas.o
+
+build $builddir/danton.o: cc deps/danton/src/danton.c
+        cflags = $cflags -DPDF_DIR="\"$$PWD/deps/ent/share/pdf\"" $
+          -DPUMAS_MDF="\"$$PWD/deps/danton/share/materials/materials.xml\"" $
+          -DPUMAS_DEDX="\"dedx\""
+        include = -Ideps/alouette/include -Ideps/danton/include $
+          -Ideps/ent/include -Ideps/pumas/include -Ideps/roar/include $
+          -Ideps/turtle/include
+
+build $builddir/danton-powerlaw.o: cc deps/danton/src/danton/primary/powerlaw.c
+        include = -I deps/danton/include
+
+build $builddir/ent.o: cc deps/ent/src/ent.c
+        include = -I deps/ent/include
+
+build $builddir/pumas.o: cc deps/pumas/src/pumas.c
+        include = -I deps/pumas/include
+
+# Build the RETRO binary
+build retro: phony bin/retro
+
+build bin/retro: binary src/retro.c src/retro/card.c src/retro/generator.c $
+        src/retro/random.c src/retro/selector.c $
+        deps/grand-tour/src/grand-tour.c | bin alouette danton jsmn_tea turtle
+        cflags = $cflags -D_GT_NO_UTM
+        include = -Ideps/alouette/include -Ideps/danton/include $
+                  -Ideps/grand-tour/include -Ideps/roar/include $
+                  -Ideps/turtle/include -Ideps/jsmn-tea/include $
+                  -Ideps/jsmn -Isrc
+        lib = -Llib -Wl,-rpath $$PWD/lib -lturtle -L$builddir -lalouette $
+                -ldanton -ljsmn-tea -lm -lgfortran -ltiff
+
+build lib/python/grand_tour.so: python-build deps/grand-tour | turtle
+        env = DEPS_DIR=$$PWD/../. LIB_DIR=$$PWD/../../lib
+        options = --build-lib=../../lib/python
+
+build clean: remove
+        targets = bin lib/*.so lib/python/*.so build
+
+default retro lib/python/grand_tour.so

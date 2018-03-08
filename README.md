@@ -5,14 +5,14 @@
 
 Coming soon ...
 
-## Installation
+## Building the binaries
 
-Clone the present repository and run the [installation](install.sh) script, e.g:
+Clone the present repository and run the [build](build.sh) script, e.g:
 
 ```bash
 git clone https://github.com/grand-mother/retro
 cd retro
-./install.sh
+./build.sh
 ```
 
 Note that you might need to install some external dependencies first, e.g.
@@ -25,11 +25,8 @@ In order to run a simulation you'll need a configuration card,
 e.g. [share/cards/ulastai.json](share/cards/ulastai.json). Then run:
 
 ```bash
-. setup.sh
-retro-run share/cards/ulastai.json
+bin/retro share/cards/ulastai.json
 ```
-
-Note that you'll need to _initialise you environment only once_, i.e. `. setup.sh`.
 
 ## License
 

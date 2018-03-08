@@ -1,6 +1,10 @@
 # Ignore binaries
 bin
 
+# Ignore temporary build data
+build
+.ninja*
+
 # Ignore DANTON/PUMAS temporary dump.
 materials.b
 
