@@ -24,6 +24,7 @@
 
 #include "jsmn-tea.h"
 #include "retro/card.h"
+#include "retro/selector.h"
 
 /* Callback for catching errors. */
 static int catch_error(
@@ -46,7 +47,7 @@ void retro_card_initialise(struct retro_card * card)
         card->generator_energy[0] = 1E-06;
         card->generator_energy[1] = 1E-12;
         card->processor_requested = -1;
-        card->selector_setup_cone = 1;
+        card->selector_setup_cone = SETUP_CONE_MODEL_3DEG;
         card->selector_setup_xmax = 1;
         card->selector_setup_shadowing = 1;
         card->logger_path = NULL;
@@ -225,16 +226,17 @@ static void update_selector_vertex(struct retro_card * card)
 
 static void update_selector_setup(struct retro_card * card)
 {
+        card->tea->handler->pre = catch_error;
         int enable;
         int jrc = jsmn_tea_next_bool(card->tea, &enable);
         card->tea->handler->pre = NULL;
         if (jrc == JSMN_SUCCESS) {
                 if (enable) {
-                        card->selector_setup_cone = 1;
+                        card->selector_setup_cone = SETUP_CONE_MODEL_3DEG;
                         card->selector_setup_xmax = 1;
                         card->selector_setup_shadowing = 1;
                 } else {
-                        card->selector_setup_cone = 0;
+                        card->selector_setup_cone = SETUP_CONE_MODEL_NONE;
                         card->selector_setup_xmax = 0;
                         card->selector_setup_shadowing = 0;
                 }
@@ -243,11 +245,26 @@ static void update_selector_setup(struct retro_card * card)
 
         LOOP_OVER_KEYS_BEGIN
         if (strcmp(tag, "cone") == 0) {
-                jsmn_tea_next_bool(card->tea, &card->selector_setup_cone);
+                card->tea->handler->pre = catch_error;
+                int jrc =
+                    jsmn_tea_next_bool(card->tea, &card->selector_setup_cone);
+                card->tea->handler->pre = NULL;
+                if (jrc != JSMN_SUCCESS) {
+                        char * s;
+                        jsmn_tea_next_string(card->tea, 0, &s);
+                        if (strcmp(s, "3deg") == 0) {
+                                card->selector_setup_cone =
+                                    SETUP_CONE_MODEL_3DEG;
+                        } else if (strcmp(s, "agressive") == 0) {
+                                card->selector_setup_cone =
+                                    SETUP_CONE_MODEL_AGRESSIVE;
+                        } else {
+                                raise_error_mode(card, s);
+                        }
+                }
         } else if (strcmp(tag, "xmax") == 0) {
                 jsmn_tea_next_bool(card->tea, &card->selector_setup_xmax);
-        }
-        if (strcmp(tag, "shadowing") == 0) {
+        } else if (strcmp(tag, "shadowing") == 0) {
                 jsmn_tea_next_bool(card->tea, &card->selector_setup_shadowing);
         }
         LOOP_OVER_KEYS_END
@@ -319,9 +336,7 @@ static void update_topography(struct retro_card * card)
 static void update_setup(struct retro_card * card)
 {
         LOOP_OVER_KEYS_BEGIN
-        if (strcmp(tag, "path") == 0) {
-                parse_string(card, &card->setup_path);
-        }
+        if (strcmp(tag, "path") == 0) { parse_string(card, &card->setup_path); }
         LOOP_OVER_KEYS_END
 }
 

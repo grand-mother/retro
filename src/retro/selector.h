@@ -28,6 +28,12 @@ typedef double selector_function_t(const struct retro_selector * selector,
 struct roar_handler;
 struct gt_topography;
 
+enum setup_cone_model {
+        SETUP_CONE_MODEL_NONE = 0,
+        SETUP_CONE_MODEL_3DEG,
+        SETUP_CONE_MODEL_AGRESSIVE
+};
+
 struct retro_selector {
         struct roar_handler * handler;
         struct gt_topography * topography;
@@ -35,7 +41,7 @@ struct retro_selector {
         double vertex_limit;
         selector_function_t * vertex;
 
-        int setup_cone;
+        enum setup_cone_model setup_cone;
         int setup_xmax;
         int setup_shadowing;
         int setup_n;
@@ -43,6 +49,7 @@ struct retro_selector {
         double * setup_data;
         double ** setup_selection;
         selector_function_t * setup;
+        selector_function_t * setup_gamma;
 };
 
 struct retro_card;

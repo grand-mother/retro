@@ -199,9 +199,7 @@ int main(int narg, char * argv[])
                 int n = (card.primary_requested > 0) ? card.primary_requested :
                                                        card.primary_events;
                 pdata = malloc(n * sizeof(*pdata));
-                if (pdata == NULL) {
-                        ROAR_ERRNO(&handler, &main, ENOMEM);
-                }
+                if (pdata == NULL) { ROAR_ERRNO(&handler, &main, ENOMEM); }
         }
 
         /* Reset the output file */
@@ -371,9 +369,10 @@ int main(int narg, char * argv[])
                             &handler, &main, 0, card.logger_path);
                 }
                 fprintf(fd, "{\"tag\" : \"%s\", ", tag);
-                fprintf(fd, "\"tau_at_decay\" : [%.5E, %.5E, [%.3lf, %.3lf, "
-                            "%.3lf], [%.5E, %.5E, %.5E], [%.8lf, %.8lf, "
-                            "%.3lf], [%.3lf, %.3lf]], ",
+                fprintf(fd,
+                    "\"tau_at_decay\" : [%.5E, %.5E, [%.3lf, %.3lf, "
+                    "%.3lf], [%.5E, %.5E, %.5E], [%.8lf, %.8lf, "
+                    "%.3lf], [%.3lf, %.3lf]], ",
                     w, tau_at_decay.energy, tau_at_decay.position[0],
                     tau_at_decay.position[1], tau_at_decay.position[2],
                     tau_at_decay.direction[0], tau_at_decay.direction[1],
@@ -393,8 +392,9 @@ int main(int narg, char * argv[])
                 for (i = 0, p = pdata; i < primary_n; i++, p++) {
                         p->weight *= w * p->energy * p->energy;
                         if (i > 0) fputs(", ", fd);
-                        fprintf(fd, "[%.5E, %.5E, %d, %d, [%.3lf, %.3lf, "
-                                    "%.3lf], [%.3lf, %.3lf, %.3lf]]",
+                        fprintf(fd,
+                            "[%.5E, %.5E, %d, %d, [%.3lf, %.3lf, "
+                            "%.3lf], [%.3lf, %.3lf, %.3lf]]",
                             p->weight, p->energy, p->generation, p->medium,
                             p->local[0], p->local[1], p->local[2], p->lla[0],
                             p->lla[1], p->lla[2]);

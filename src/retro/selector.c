@@ -108,7 +108,12 @@ static double select_setup(const struct retro_selector * selector,
     double energy, const double * position, const double * direction)
 {
         /* Cone parameters */
-        const double tan_gamma = tan(3. * M_PI / 180.);
+        double tan_gamma = 0.;
+        if (selector->setup_cone) {
+                const double gamma = selector->setup_gamma(
+                    selector, energy, position, direction);
+                tan_gamma = tan(gamma * M_PI / 180.);
+        }
         const double zcmin = 14E+03;
         const double zcmax = 165E+03 * energy / 1E+09 + 55E+03;
 
@@ -171,6 +176,18 @@ static double select_setup(const struct retro_selector * selector,
         return triggers;
 }
 
+static double cone_model_3deg(const struct retro_selector * selector,
+    double energy, const double * position, const double * direction)
+{
+        return 3.;
+}
+
+static double cone_model_agressive(const struct retro_selector * selector,
+    double energy, const double * position, const double * direction)
+{
+        return 0.47 * log(energy / 1E+08) + 0.9;
+}
+
 void selector_initialise(struct retro_selector * selector,
     const struct retro_card * card, struct roar_handler * handler,
     struct gt_topography * topography)
@@ -216,8 +233,10 @@ void selector_initialise(struct retro_selector * selector,
                 int i;
                 char * c;
                 for (i = 0, c = buffer; i < n; i++, c++) {
-                        if (*c == '[') n_antennas++;
-                        else if (*c == ',') size++;
+                        if (*c == '[')
+                                n_antennas++;
+                        else if (*c == ',')
+                                size++;
                 }
         }
         if (n_antennas <= 0) {
@@ -241,8 +260,13 @@ void selector_initialise(struct retro_selector * selector,
                         ROAR_ERRNO_MESSAGE(selector->handler,
                             &selector_initialise, ENOMEM, card->setup_path);
                 }
+                selector->setup_gamma =
+                    (selector->setup_cone == SETUP_CONE_MODEL_3DEG) ?
+                    &cone_model_3deg :
+                    &cone_model_agressive;
         } else {
                 selector->setup_selection = NULL;
+                selector->setup_gamma = NULL;
         }
 
         rewind(fid);
