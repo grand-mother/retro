@@ -42,6 +42,22 @@ static double generate_position(
                     generator->position_parameter[i][1] * random_uniform01();
         }
 
+        if (generator->position_mode == RETRO_GENERATOR_MODE_GEODETIC) {
+                int rc;
+                double lla[3];
+                if ((rc = gt_to_lla(generator->topography, position, lla)) !=
+                    EXIT_SUCCESS) {
+                        ROAR_ERRWP_MESSAGE(generator->handler,
+                            &generate_position, -1, "turtle error",
+                            turtle_strerror(rc));
+                }
+                if ((lla[0] < generator->position_parameter[3][0]) ||
+                    (lla[0] > generator->position_parameter[3][1]) ||
+                    (lla[1] < generator->position_parameter[4][0]) ||
+                    (lla[1] > generator->position_parameter[4][1]))
+                        return -1.;
+        }
+
         int rc;
         double zg;
         if ((rc = gt_ground_altitude(
@@ -173,6 +189,26 @@ static double generate_decay(
         return 1. - TAU_BR_MU;
 }
 
+static void update_bounding_box(struct retro_generator * generator,
+    double latitude, double longitude, double bounding_box[2][2])
+{
+        double lla[3] = { latitude, longitude, 0. }, local[3];
+        int rc;
+        if ((rc = gt_from_lla(generator->topography, lla, local)) !=
+            EXIT_SUCCESS) {
+                ROAR_ERRWP_MESSAGE(generator->handler, &generator_initialise,
+                    -1, "turtle error", turtle_strerror(rc));
+        }
+
+        int i;
+        for (i = 0; i < 2; i++) {
+                if (local[i] < bounding_box[i][0])
+                        bounding_box[i][0] = local[i];
+                else if (local[i] > bounding_box[i][1])
+                        bounding_box[i][1] = local[i];
+        }
+}
+
 static double angle2cos(double angle)
 {
         const double c = cos(angle * M_PI / 180.);
@@ -180,13 +216,68 @@ static double angle2cos(double angle)
 }
 
 void generator_initialise(struct retro_generator * generator,
-    const struct retro_card * card, struct roar_handler * handler,
+    struct retro_card * card, struct roar_handler * handler,
     struct gt_topography * topography)
 {
         generator->handler = handler;
         generator->topography = topography;
 
+        generator->position_mode = card->generator_position_mode;
         generator->position_weight = 1;
+        if (generator->position_mode == RETRO_GENERATOR_MODE_GEODETIC) {
+                /* Compute the bounding box parameters */
+                double bounding_box[2][2] = { { DBL_MAX, -DBL_MAX },
+                        { DBL_MAX, -DBL_MAX } };
+                update_bounding_box(generator,
+                    card->topography_latitude + card->generator_position[0][0],
+                    card->topography_longitude + card->generator_position[1][0],
+                    bounding_box);
+                update_bounding_box(generator,
+                    card->topography_latitude + card->generator_position[0][1],
+                    card->topography_longitude + card->generator_position[1][0],
+                    bounding_box);
+                update_bounding_box(generator,
+                    card->topography_latitude + card->generator_position[0][1],
+                    card->topography_longitude + card->generator_position[1][1],
+                    bounding_box);
+                update_bounding_box(generator,
+                    card->topography_latitude + card->generator_position[0][0],
+                    card->topography_longitude + card->generator_position[1][1],
+                    bounding_box);
+                update_bounding_box(generator,
+                    card->topography_latitude + card->generator_position[0][0],
+                    card->topography_longitude, bounding_box);
+                update_bounding_box(generator,
+                    card->topography_latitude + card->generator_position[0][1],
+                    card->topography_longitude, bounding_box);
+                update_bounding_box(generator, card->topography_latitude,
+                    card->topography_longitude + card->generator_position[1][0],
+                    bounding_box);
+                update_bounding_box(generator, card->topography_latitude,
+                    card->topography_longitude + card->generator_position[1][1],
+                    bounding_box);
+
+                /* Set the geodetic box */
+                int j;
+                for (j = 0; j < 2; j++) {
+                        generator->position_parameter[3][j] =
+                            card->topography_latitude +
+                            card->generator_position[0][j];
+                        generator->position_parameter[4][j] =
+                            card->topography_longitude +
+                            card->generator_position[1][j];
+                }
+
+                /* Copy the local box */
+                int i;
+                for (i = 0; i < 2; i++) {
+                        for (j = 0; j < 2; j++) {
+                                card->generator_position[i][j] =
+                                    bounding_box[i][j];
+                        }
+                }
+        }
+
         int i;
         for (i = 0; i < 3; i++) {
                 const double d = card->generator_position[i][1] -
@@ -208,7 +299,7 @@ void generator_initialise(struct retro_generator * generator,
                 generator->direction = &generate_direction_uniform;
         } else if (card->generator_theta_mode == RETRO_GENERATOR_MODE_LINEAR) {
                 if (c1 * c0 < 0.) {
-                        ROAR_ERRNO_MESSAGE(&handler, &generator_initialise,
+                        ROAR_ERRNO_MESSAGE(handler, &generator_initialise,
                             EINVAL,
                             "invalid theta values for linear generator");
                 }
@@ -220,7 +311,7 @@ void generator_initialise(struct retro_generator * generator,
                 generator->direction_weight = fabs(dc2) * M_PI;
                 generator->direction = &generate_direction_linear;
         } else {
-                ROAR_ERRNO_MESSAGE(&handler, &generator_initialise, EINVAL,
+                ROAR_ERRNO_MESSAGE(handler, &generator_initialise, EINVAL,
                     "invalid generator mode for the theta angle");
         }
 
@@ -240,7 +331,7 @@ void generator_initialise(struct retro_generator * generator,
                 generator->energy_weight = lne;
                 generator->energy = &generate_energy_1_over_E;
         } else if (card->generator_energy_mode ==
-            RETRO_GENERATOR_MODE_1_OVER_E) {
+            RETRO_GENERATOR_MODE_1_OVER_E2) {
                 const double r =
                     1. - card->generator_energy[0] / card->generator_energy[1];
                 generator->energy_parameter[0] = card->generator_energy[0];
@@ -248,7 +339,7 @@ void generator_initialise(struct retro_generator * generator,
                 generator->energy_weight = r / card->generator_energy[0];
                 generator->energy = &generate_energy_1_over_E2;
         } else {
-                ROAR_ERRNO_MESSAGE(&handler, &generator_initialise, EINVAL,
+                ROAR_ERRNO_MESSAGE(handler, &generator_initialise, EINVAL,
                     "invalid generator mode for the energy");
         }
 

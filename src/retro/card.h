@@ -28,6 +28,7 @@ struct retro_card {
         struct jsmn_tea * tea;
         const char * path;
 
+        enum retro_generator_mode generator_position_mode;
         enum retro_generator_mode generator_theta_mode;
         enum retro_generator_mode generator_energy_mode;
         double generator_theta[2];

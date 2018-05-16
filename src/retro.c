@@ -281,10 +281,11 @@ int main(int narg, char * argv[])
                 /* Generate a tentative decay vertex */
                 statistics.trials += 1;
                 trials += 1;
-                double w =
-                    generator.position(&generator, tau_at_decay.position);
+                double w;
+                if ((w = generator.position(
+                         &generator, tau_at_decay.position)) <= 0.)
+                        continue;
                 double angle[2];
-
                 w *= generator.direction(&generator, angle);
                 int rc;
                 if ((rc = gt_from_angular(&topography, tau_at_decay.position,

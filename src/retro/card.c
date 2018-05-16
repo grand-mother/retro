@@ -40,6 +40,7 @@ void retro_card_initialise(struct retro_card * card)
         card->tea = NULL;
         card->path = NULL;
 
+        card->generator_position_mode = RETRO_GENERATOR_MODE_LOCAL;
         card->generator_theta_mode = RETRO_GENERATOR_MODE_UNIFORM;
         card->generator_energy_mode = RETRO_GENERATOR_MODE_1_OVER_E;
         card->generator_theta[0] = 80.;
@@ -168,10 +169,30 @@ static void update_generator(struct retro_card * card)
                         } else {
                                 raise_error_mode(card, mode);
                         }
+                } else {
+                        card->generator_energy_mode =
+                            RETRO_GENERATOR_MODE_1_OVER_E;
                 }
         } else if (strcmp(tag, "position") == 0) {
                 int size;
                 jsmn_tea_next_array(card->tea, &size);
+                if (size == 2) {
+                        char * mode;
+                        jsmn_tea_next_string(card->tea, 0, &mode);
+                        if (strcmp(mode, "local") == 0) {
+                                card->generator_position_mode =
+                                    RETRO_GENERATOR_MODE_LOCAL;
+                        } else if (strcmp(mode, "geodetic") == 0) {
+                                card->generator_position_mode =
+                                    RETRO_GENERATOR_MODE_GEODETIC;
+                        } else {
+                                raise_error_mode(card, mode);
+                        }
+                        jsmn_tea_next_array(card->tea, &size);
+                } else {
+                        card->generator_position_mode =
+                            RETRO_GENERATOR_MODE_LOCAL;
+                }
                 if (size != 3) raise_error_size(card, size);
                 for (; size > 0; size--)
                         parse_double2(
@@ -189,6 +210,9 @@ static void update_generator(struct retro_card * card)
                         } else {
                                 raise_error_mode(card, mode);
                         }
+                } else {
+                        card->generator_theta_mode =
+                            RETRO_GENERATOR_MODE_UNIFORM;
                 }
         }
         LOOP_OVER_KEYS_END

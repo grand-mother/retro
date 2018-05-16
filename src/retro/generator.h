@@ -26,7 +26,9 @@ enum retro_generator_mode {
         RETRO_GENERATOR_MODE_UNIFORM = 0,
         RETRO_GENERATOR_MODE_LINEAR,
         RETRO_GENERATOR_MODE_1_OVER_E,
-        RETRO_GENERATOR_MODE_1_OVER_E2
+        RETRO_GENERATOR_MODE_1_OVER_E2,
+        RETRO_GENERATOR_MODE_LOCAL,
+        RETRO_GENERATOR_MODE_GEODETIC,
 };
 
 struct retro_generator;
@@ -45,8 +47,9 @@ struct retro_generator {
         struct roar_handler * handler;
         struct gt_topography * topography;
 
+        enum retro_generator_mode position_mode;
         double position_weight;
-        double position_parameter[3][2];
+        double position_parameter[5][2];
         generator_function_t * position;
 
         double direction_weight;
@@ -69,7 +72,7 @@ struct retro_generator {
 
 struct retro_card;
 void generator_initialise(struct retro_generator * generator,
-    const struct retro_card * card, struct roar_handler * handler,
+    struct retro_card * card, struct roar_handler * handler,
     struct gt_topography * topography);
 
 void generator_decay_initialise(struct retro_generator * generator, int pid,
