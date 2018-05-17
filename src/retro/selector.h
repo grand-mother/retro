@@ -22,7 +22,7 @@
 #define RETRO_SELECTOR_H_
 
 struct retro_selector;
-typedef double selector_function_t(const struct retro_selector * selector,
+typedef double selector_function_t(struct retro_selector * selector,
     double energy, const double * position, const double * direction);
 
 struct roar_handler;
@@ -32,6 +32,12 @@ enum setup_cone_model {
         SETUP_CONE_MODEL_NONE = 0,
         SETUP_CONE_MODEL_3DEG,
         SETUP_CONE_MODEL_AGRESSIVE
+};
+
+enum setup_array_model {
+        SETUP_ARRAY_MODEL_NONE = 0,
+        SETUP_ARRAY_MODEL_FILE,
+        SETUP_ARRAY_MODEL_WORLD_WIDE
 };
 
 struct retro_selector {
@@ -44,6 +50,9 @@ struct retro_selector {
         enum setup_cone_model setup_cone;
         int setup_xmax;
         int setup_shadowing;
+        enum setup_array_model array;
+        double setup_ww_step;
+        double setup_ww_height;
         int setup_n;
         int setup_size;
         double * setup_data;

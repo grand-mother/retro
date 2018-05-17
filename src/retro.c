@@ -312,10 +312,11 @@ int main(int narg, char * argv[])
 
                 /* Preselect antennas that might detect the radio signal from
                  * the shower */
+                int triggers = 0;
                 if (selector.setup != NULL) {
-                        if (selector.setup(&selector, shower_energy,
-                                tau_at_decay.position,
-                                tau_at_decay.direction) < 4.)
+                        if ((triggers = selector.setup(&selector, shower_energy,
+                                 tau_at_decay.position,
+                                 tau_at_decay.direction)) < 4.)
                                 continue;
                 }
 
@@ -355,7 +356,7 @@ int main(int narg, char * argv[])
 
                 /* Build the event tag */
                 if (angle[1] < 0.) angle[1] += 360.;
-                char subtag[16], tag[512];
+                char subtag[16], tag[4096];
                 sprintf(subtag, "%.0e", tau_at_decay.energy * 1E+09);
                 memmove(subtag + 2, subtag + 3, 3 * sizeof(char));
                 sprintf(tag,
@@ -403,18 +404,25 @@ int main(int narg, char * argv[])
                 fprintf(fd, "], \"statistics\" : [%lld, %d], ", trials,
                     primary_trials);
                 fputs("\"antennas\" : [", fd);
-                double ** s;
-                for (i = 0, s = selector.setup_selection; *s != NULL;
-                     i++, s++) {
-                        double * ra = *s;
-                        double local[3];
-                        gt_from_ecef(&topography, ra, 0, local);
+                double ** s = selector.setup_selection;
+                double * data = selector.setup_data;
+                for (i = 0; i < triggers; i++) {
+                        double *antenna, *local;
+                        double tmp[3];
+                        if (selector.array == SETUP_ARRAY_MODEL_FILE) {
+                                antenna = *s++;
+                                gt_from_ecef(&topography, antenna, 0, tmp);
+                                local = tmp;
+                        } else {
+                                local = antenna = data;
+                                data += selector.setup_size;
+                        }
                         if (i > 0) fputs(", ", fd);
                         fprintf(fd, "[%.3lf, %.3lf, %.3lf", local[0], local[1],
                             local[2]);
                         int j;
                         for (j = 3; j < selector.setup_size; j++)
-                                fprintf(fd, ", %.3lf", ra[j]);
+                                fprintf(fd, ", %.3lf", antenna[j]);
                         fputs("]", fd);
                 }
                 fprintf(fd, "], \"origin\" : [%.8lf, %.8lf], ",

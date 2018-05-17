@@ -20,7 +20,7 @@
         "topography" : {
                 "latitude" : 43,
                 "longitude" : 87,
-                "path" : "flat/2" },
+                "path" : "flat/3" },
 
         "primary" : {
                 "events" : 1000,
@@ -28,5 +28,5 @@
                 "longitudinal" : false },
 
         "setup" : {
-                "path": "share/setup/flat-30x30.json" }
+                "path": "ww://500.0/4.5" }
 }
