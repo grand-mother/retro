@@ -150,13 +150,12 @@ static int check_antenna(struct retro_selector * selector, const double * ra,
         const double zp = u[0] * dx + u[1] * dy + u[2] * dz;
         if ((zp < zcmin) || (zp > zcmax)) return EXIT_FAILURE;
         const double rp2 = dx * dx + dy * dy + dz * dz - zp * zp;
-        const double rho = (zp - zcmin) * tan_gamma;
+        const double rho = zp * tan_gamma;
         if (rp2 > rho * rho) return EXIT_FAILURE;
 
         /* Check for any shadowing by the topography. */
         if (selector->setup_shadowing) {
-                double n[3] = { dx - zcmin * u[0], dy - zcmin * u[1],
-                        dz - zcmin * u[2] };
+                double n[3] = { dx, dy, dz };
                 const double s2 = n[0] * n[0] + n[1] * n[1] + n[2] * n[2];
                 if (s2 <= FLT_EPSILON) return EXIT_FAILURE;
                 const double smax = sqrt(s2);
@@ -165,8 +164,9 @@ static int check_antenna(struct retro_selector * selector, const double * ra,
                 n[0] *= d;
                 n[1] *= d;
                 n[2] *= d;
-                if (topography_intersect(selector, r1, n, 0., smax - RAY_STEP,
-                        NULL) == EXIT_SUCCESS)
+#define SAFETY_DIST 50.
+                if (topography_intersect(selector, r0, n, 0.,
+                        smax - SAFETY_DIST, NULL) == EXIT_SUCCESS)
                         return EXIT_FAILURE;
         }
 
