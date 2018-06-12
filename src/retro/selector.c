@@ -95,12 +95,8 @@ static int topography_intersect(struct retro_selector * selector,
         for (;;) {
                 /* Get the geodetic coordinates */
                 double latitude, longitude, altitude;
-                enum turtle_return rc;
-                if ((rc = turtle_datum_geodetic(datum, r, &latitude, &longitude,
-                         &altitude)) != TURTLE_RETURN_SUCCESS) {
-                        ROAR_ERRWP_MESSAGE(selector->handler, &select_setup, -1,
-                            "turtle error", turtle_strerror(rc));
-                }
+                turtle_datum_geodetic(
+                    datum, r, &latitude, &longitude, &altitude);
 
                 /* Check the altitude */
                 double zg;
@@ -286,14 +282,8 @@ static double select_setup(struct retro_selector * selector, double energy,
                                 if (altitude < 0.) continue;
                                 altitude += selector->setup_ww_height;
                                 double ra[3];
-                                enum turtle_return rc;
-                                if ((rc = turtle_datum_ecef(datum, latitude,
-                                         longitude, altitude, ra)) !=
-                                    TURTLE_RETURN_SUCCESS) {
-                                        ROAR_ERRWP_MESSAGE(selector->handler,
-                                            &select_setup, -1, "turtle error",
-                                            turtle_strerror(rc));
-                                }
+                                turtle_datum_ecef(
+                                    datum, latitude, longitude, altitude, ra);
                                 if (check_antenna(selector, ra, u, r0, r1,
                                         zcmin, zcmax,
                                         tan_gamma) == EXIT_FAILURE)

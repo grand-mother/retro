@@ -41,11 +41,13 @@ build lib: mkdir
 # Build TURTLE as a shared library
 build turtle: phony lib/libturtle.so
 
-build lib/libturtle.so: shared deps/turtle/src/geotiff16.c $
-        deps/turtle/src/turtle.c deps/turtle/src/turtle_client.c $
-        deps/turtle/src/turtle_datum.c deps/turtle/src/turtle_map.c $
-        deps/turtle/src/turtle_projection.c | lib deps/tinydir/tinydir.h
-        cflags = $cflags -DTURTLE_NO_PNG
+build lib/libturtle.so: shared deps/turtle/src/turtle.c                        $
+        deps/turtle/src/turtle/client.c deps/turtle/src/turtle/datum.c         $
+        deps/turtle/src/turtle/map.c deps/turtle/src/turtle/projection.c       $
+        deps/turtle/src/turtle/loader.c                                        $
+        deps/turtle/src/turtle/loader/geotiff16.c                              $
+        deps/turtle/src/turtle/loader/hgt.c | lib deps/tinydir/tinydir.h
+        cflags = $cflags -DTURTLE_NO_PNG -DTURTLE_NO_TIFF
         include = -Ideps/turtle/include -Ideps/tinydir
         lib = -ltiff
 

@@ -16,8 +16,9 @@ cd retro
 ```
 
 Note that you might need to install some external dependencies first, e.g.
-`libtiff` for reading the [ASTER-GDEM2](https://asterweb.jpl.nasa.gov/gdem.asp)
-topography data with TURTLE.
+`gfortran` for TAUOLA. In addition, for a detailed topography you'll need to
+fetch the [SRTMGL1](https://lpdaac.usgs.gov/node/527) tiles corresponding to
+your location.
 
 ## Documentation
 
