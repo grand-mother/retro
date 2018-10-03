@@ -18,6 +18,7 @@ lib/python/retro/*.pyc
 # Ignore topographic and setup data (too large).
 share/*
 !share/cards
+!share/scripts
 
 # Ignore generated events.
 events-*.json
