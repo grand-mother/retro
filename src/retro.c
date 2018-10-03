@@ -213,7 +213,8 @@ int main(int narg, char * argv[])
         long previous[2] = { -1, 0 };
 
         /* Initialise DANTON */
-        if (danton_initialise(NULL, NULL, NULL) != EXIT_SUCCESS) raise_danton();
+        if (danton_initialise(NULL, NULL, NULL, NULL, NULL) != EXIT_SUCCESS)
+            raise_danton();
 
         /* Configure the topography */
         int sea = 0;

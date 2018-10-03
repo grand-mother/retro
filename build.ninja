@@ -54,13 +54,13 @@ build lib/libturtle.so: shared deps/turtle/src/turtle.c                        $
 # Build ALOUETTE as a static library
 build alouette: phony $builddir/libalouette.a
 
-build $builddir/libalouette.a: static $builddir/tauola.o $builddir/formf.o $
-        $builddir/curr_cleo.o $builddir/pkorb.o $builddir/f3pi.o $
-        $builddir/tauola_extras.o $builddir/f3pi_rcht.o $builddir/funct_3pi.o $
-        $builddir/funct_rpt.o $builddir/value_parameter.o $builddir/FA1RCHL.o $
-        $builddir/ffwid3pi.o $builddir/initA1TabKKpi.o $builddir/wid_a1_fit.o $
-        $builddir/initA1Tab.o $builddir/wid_a1_fitKKpi.o $
-        $builddir/gaus_integr.o $builddir/gfact.o $builddir/frho_pi_belle.o $
+build $builddir/libalouette.a: static $builddir/tauola.o $builddir/formf.o     $
+        $builddir/curr_cleo.o $builddir/pkorb.o $builddir/f3pi.o               $
+        $builddir/tauola_extras.o $builddir/f3pi_rcht.o $builddir/funct_3pi.o  $
+        $builddir/funct_rpt.o $builddir/value_parameter.o $builddir/FA1RCHL.o  $
+        $builddir/ffwid3pi.o $builddir/initA1TabKKpi.o $builddir/wid_a1_fit.o  $
+        $builddir/initA1Tab.o $builddir/wid_a1_fitKKpi.o                       $
+        $builddir/gaus_integr.o $builddir/gfact.o $builddir/frho_pi_belle.o    $
         $builddir/alouette.o
 
 build $builddir/alouette.o: cc deps/alouette/src/alouette.c
@@ -95,27 +95,28 @@ build jsmn_tea: phony $builddir/libjsmn-tea.a
 
 build $builddir/libjsmn-tea.a: static $builddir/jsmn-tea.o $builddir/jsmn.o
 
-build $builddir/jsmn-tea.o: cc deps/jsmn-tea/src/jsmn-tea.c $
+build $builddir/jsmn-tea.o: cc deps/jsmn-tea/src/jsmn-tea.c                    $
         | deps/roar/include/roar.h
         cflags = $cflags -DROAR_IMPLEMENTATION
         include = -Ideps/jsmn -Ideps/jsmn-tea/include -Ideps/roar/include
 
-build $builddir/jsmn.o: cc deps/jsmn/jsmn.c $
+build $builddir/jsmn.o: cc deps/jsmn/jsmn.c                                    $
         | deps/roar/include/roar.h
         include = -Ideps/jsmn
 
 # Build DANTON as a static library
 build danton: phony $builddir/libdanton.a
 
-build $builddir/libdanton.a: static $builddir/danton.o $
+build $builddir/libdanton.a: static $builddir/danton.o                         $
         $builddir/danton-powerlaw.o $builddir/ent.o $builddir/pumas.o
 
 build $builddir/danton.o: cc deps/danton/src/danton.c
-        cflags = $cflags -DPDF_DIR="\"$$PWD/deps/ent/share/pdf\"" $
-          -DPUMAS_MDF="\"$$PWD/deps/danton/share/materials/materials.xml\"" $
-          -DPUMAS_DEDX="\"dedx\""
-        include = -Ideps/alouette/include -Ideps/danton/include $
-          -Ideps/ent/include -Ideps/pumas/include -Ideps/roar/include $
+        cflags = $cflags                                                       $
+          -DDANTON_DEFAULT_PDF="\"$$PWD/deps/ent/share/pdf/CT14nlo_0000.dat\"" $
+          -DDANTON_DEFAULT_MDF="\"$$PWD/deps/danton/share/materials/materials.xml\"" $
+          -DDANTON_DEFAULT_DEDX="\"$$PWD/deps/danton/share/materials/dedx\""
+        include = -Ideps/alouette/include -Ideps/danton/include                $
+          -Ideps/ent/include -Ideps/pumas/include -Ideps/roar/include          $
           -Ideps/turtle/include
 
 build $builddir/danton-powerlaw.o: cc deps/danton/src/danton/primary/powerlaw.c
@@ -130,15 +131,15 @@ build $builddir/pumas.o: cc deps/pumas/src/pumas.c
 # Build the RETRO binary
 build retro: phony bin/retro
 
-build bin/retro: binary src/retro.c src/retro/card.c src/retro/generator.c $
-        src/retro/random.c src/retro/selector.c $
+build bin/retro: binary src/retro.c src/retro/card.c src/retro/generator.c     $
+        src/retro/random.c src/retro/selector.c                                $
         deps/grand-tour/src/grand-tour.c | bin alouette danton jsmn_tea turtle
         cflags = $cflags -D_GT_NO_UTM
-        include = -Ideps/alouette/include -Ideps/danton/include $
-                  -Ideps/grand-tour/include -Ideps/roar/include $
-                  -Ideps/turtle/include -Ideps/jsmn-tea/include $
+        include = -Ideps/alouette/include -Ideps/danton/include                $
+                  -Ideps/grand-tour/include -Ideps/roar/include                $
+                  -Ideps/turtle/include -Ideps/jsmn-tea/include                $
                   -Ideps/jsmn -Isrc
-        lib = -Llib -Wl,-rpath $$PWD/lib -lturtle -L$builddir -lalouette $
+        lib = -Llib -Wl,-rpath $$PWD/lib -lturtle -L$builddir -lalouette       $
                 -ldanton -ljsmn-tea -lm -lgfortran -ltiff
 
 build lib/python/grand_tour.so: python-build deps/grand-tour | turtle

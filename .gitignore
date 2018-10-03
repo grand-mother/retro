@@ -6,7 +6,7 @@ build
 .ninja*
 
 # Ignore DANTON/PUMAS temporary dump.
-materials.b
+.danton.cfg
 
 # ignore lib except lib/python/retro.
 lib/*
@@ -16,8 +16,8 @@ lib/python/*
 lib/python/retro/*.pyc
 
 # Ignore topographic and setup data (too large).
-share/topography
-share/setup
+share/*
+!share/cards
 
 # Ignore generated events.
 events-*.json
