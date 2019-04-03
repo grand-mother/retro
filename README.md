@@ -23,10 +23,10 @@ your location.
 ## Documentation
 
 In order to run a simulation you'll need a configuration card,
-e.g. [share/cards/ulastai.json](share/cards/ulastai.json). Then run:
+e.g. [share/cards/flat.json](share/cards/ulastai.json). Then run:
 
 ```bash
-bin/retro share/cards/ulastai.json
+bin/retro share/cards/flat.json
 ```
 
 ## License

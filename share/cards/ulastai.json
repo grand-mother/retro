@@ -10,7 +10,7 @@
                                       [-5E+04, 5E+04],
                                       [0, 1E+03] ]},
         "processor" : {
-                "requested" : 100,
+                "requested" : 10,
                 "trials" : null },
 
         "selector" : {
